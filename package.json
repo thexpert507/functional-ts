@@ -23,7 +23,7 @@
     "test:ui": "vitest --ui",
     "coverage": "vitest run --coverage",
     "benchmark": "tsc ./lib/tests/AsyncEither.benchmark.ts && node ./lib/tests/AsyncEither.benchmark.js",
-    "prepublish": "pnpm build"
+    "prepublish": "pnpm test && pnpm build"
   },
   "devDependencies": {
     "@types/benchmark": "^2.1.5",
