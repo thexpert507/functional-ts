@@ -1,0 +1,13 @@
+# Ignora todos los archivos de TypeScript
+**/*.ts
+
+# Ignora todos los archivos de prueba
+**/*.test.ts
+
+# Ignora la carpeta node_modules
+node_modules
+
+# Ignora la carpeta .vscode
+.vscode
+
+!dist
