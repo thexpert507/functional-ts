@@ -1,3 +1,6 @@
+# No ignores los archivos de definición de tipos
+!**/*.d.ts
+
 # Ignora todos los archivos de TypeScript
 **/*.ts
 
@@ -9,5 +12,8 @@ node_modules
 
 # Ignora la carpeta .vscode
 .vscode
+
+# Ignora la carpeta test
+tests
 
 !dist
