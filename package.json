@@ -1,0 +1,39 @@
+{
+  "name": "monads-ts",
+  "private": false,
+  "version": "1.0.13",
+  "type": "module",
+  "exports": {
+    "require": "./dist/main.umd.cjs",
+    "import": "./dist/main.js",
+    "types": "./dist/index.d.ts"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./dist/index.d.ts"
+      ]
+    }
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "coverage": "vitest run --coverage",
+    "benchmark": "tsc ./lib/tests/AsyncEither.benchmark.ts && node ./lib/tests/AsyncEither.benchmark.js",
+    "prepublish": "pnpm build"
+  },
+  "devDependencies": {
+    "@types/benchmark": "^2.1.5",
+    "@types/node": "18.15.11",
+    "@vitest/ui": "^1.4.0",
+    "benchmark": "^2.1.4",
+    "ts-node": "^10.0.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.6",
+    "vite-plugin-dts": "^3.7.3",
+    "vitest": "^1.4.0"
+  }
+}
