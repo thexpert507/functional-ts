@@ -2,7 +2,7 @@
 !**/*.d.ts
 
 # Ignora todos los archivos de TypeScript
-**/*.ts
+lib
 
 # Ignora todos los archivos de prueba
 **/*.test.ts
