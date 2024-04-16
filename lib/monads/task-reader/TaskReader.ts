@@ -5,7 +5,7 @@ import { TaskIO } from "../TaskIO";
 
 type F<A, B> = (a: NonNullable<A>) => B;
 
-export class TaskReader<R, A, E = unknown> {
+export class TaskReader<R, A> {
   static from<R, A>(f: (r: R) => Promise<A>): TaskReader<R, A> {
     return new TaskReader(f);
   }
@@ -14,7 +14,7 @@ export class TaskReader<R, A, E = unknown> {
     return new TaskReader((r: R) => fn(r).run());
   }
 
-  static fromTaskEither<R, A, L = unknown>(fn: (a: R) => TaskEither<L, A>): TaskReader<R, A, L> {
+  static fromTaskEither<R, A, L = unknown>(fn: (a: R) => TaskEither<L, A>): TaskReader<R, A> {
     return new TaskReader((r: R) => fn(r).getOrElseThrow());
   }
 
@@ -26,7 +26,7 @@ export class TaskReader<R, A, E = unknown> {
     return new TaskReader(() => Promise.resolve(a));
   }
 
-  static ofEither<R, A, L = unknown>(either: Either<L, A>): TaskReader<R, A, L> {
+  static ofEither<R, A, L = unknown>(either: Either<L, A>): TaskReader<R, A> {
     return new TaskReader(async () => either.getOrElseThrow());
   }
 
