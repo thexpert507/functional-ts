@@ -1,7 +1,7 @@
 {
   "name": "monads-ts",
   "private": false,
-  "version": "1.0.14",
+  "version": "1.0.15",
   "type": "module",
   "exports": {
     "require": "./dist/main.umd.cjs",
