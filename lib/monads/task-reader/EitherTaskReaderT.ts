@@ -1,4 +1,4 @@
-import { TaskEither } from "../TaskEither";
+import { TaskEither } from "../either/TaskEither";
 import { Either, left, right } from "../either";
 import { TaskReaderT } from "./TaskReaderT";
 
@@ -19,7 +19,9 @@ export class EitherTaskReaderT<R, A, E> implements TaskReaderT<R, A> {
 
   chain<B>(f: (a: A) => TaskReaderT<R, B>) {
     return new EitherTaskReaderT((r: R) =>
-      this.run(r).chain<B>((a) => TaskEither.from(() => f(a).fold(r, (e): Either<E, B> => left<E>(e as any), right)))
+      this.run(r).chain<B>((a) =>
+        TaskEither.from(() => f(a).fold(r, (e): Either<E, B> => left<E>(e as any), right))
+      )
     );
   }
 
@@ -29,7 +31,11 @@ export class EitherTaskReaderT<R, A, E> implements TaskReaderT<R, A> {
 
   toEither<E = unknown>(ctx: R, mapErr?: ((err: unknown) => E) | undefined): TaskEither<E, A> {
     return TaskEither.from(() => {
-      return this.fold(ctx, (e): Either<E, A> => (mapErr ? left<E>(mapErr(e)) : left<E>(e as any)), right);
+      return this.fold(
+        ctx,
+        (e): Either<E, A> => (mapErr ? left<E>(mapErr(e)) : left<E>(e as any)),
+        right
+      );
     });
   }
 }

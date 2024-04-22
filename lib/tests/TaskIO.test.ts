@@ -1,6 +1,6 @@
 // TaskIO.test.ts
 import { test } from "vitest";
-import { TaskIO } from "../monads/TaskIO";
+import { TaskIO } from "../monads/io/TaskIO";
 
 test("TaskIO constructor and run", async ({ expect }) => {
   const taskIOInstance = new TaskIO(() => Promise.resolve("test"));

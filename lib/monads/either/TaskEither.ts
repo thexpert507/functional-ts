@@ -1,5 +1,7 @@
-import { PrimitiveEither, Either, Left, Right, left, right } from "./either/Either";
-import { maybe } from "./maybe/Maybe";
+import { PrimitiveEither, Either, Left, Right, left, right } from "./Either";
+import { Monad } from "../types/Monad";
+import { maybe } from "../maybe";
+import { MapFn } from "../free";
 
 const handleError = (error: any) => {
   if (error instanceof Either) return error;
@@ -10,7 +12,7 @@ const handleError = (error: any) => {
 
 type F<A, B> = (a: NonNullable<A>) => B;
 
-export class TaskEither<L, R> {
+export class TaskEither<L, R> implements Monad<R> {
   static sequence<L, R>(arr: TaskEither<L, R>[]): TaskEither<L, R[]> {
     if (arr.length === 0) return TaskEither.right<L, R[]>([]);
 
@@ -29,8 +31,10 @@ export class TaskEither<L, R> {
   }
 
   private static parsePrimitiveEither<L, R>(value: any): PrimitiveEither<L, R> {
-    if (value === null) return { isRight: false, value: "Null value from TaskEither.fromPrimitives" as L };
-    if (value === undefined) return { isRight: false, value: "Undefined value from TaskEither.fromPrimitives" as L };
+    if (value === null)
+      return { isRight: false, value: "Null value from TaskEither.fromPrimitives" as L };
+    if (value === undefined)
+      return { isRight: false, value: "Undefined value from TaskEither.fromPrimitives" as L };
     if (typeof value === "object" && "isRight" in value) return value;
     if (value instanceof Either) return value.toPrimitive();
     return { isRight: false, value: value };
@@ -62,10 +66,13 @@ export class TaskEither<L, R> {
     return TaskEither.of(left(value));
   }
 
-  static appply<L, A, B>(f: TaskEither<L, F<A, B>>, mb: TaskEither<L, NonNullable<A>>): TaskEither<L, B> {
+  static appply<L, A, B>(
+    f: TaskEither<L, F<A, B>>,
+    mb: TaskEither<L, NonNullable<A>>
+  ): TaskEither<L, B> {
     return TaskEither.from<L, B>(async (): Promise<Either<L, B>> => {
-      const eitherFn = await f.run();
-      const eitherValue = await mb.run();
+      const eitherFn = await f.effect();
+      const eitherValue = await mb.effect();
 
       if (eitherFn.isLeft()) return left(eitherFn.left()!);
       if (eitherValue.isLeft()) return left(eitherValue.left()!);
@@ -77,10 +84,10 @@ export class TaskEither<L, R> {
     });
   }
 
-  constructor(public readonly run: () => Promise<Either<L, R>>) {}
+  constructor(public readonly effect: () => Promise<Either<L, R>>) {}
 
   async fold<T>(left: (l: L) => T, right: (r: R) => T): Promise<T> {
-    return this.run().then((either) => either.fold(left, right));
+    return this.effect().then((either) => either.fold(left, right));
   }
 
   left(): Promise<L | undefined> {
@@ -111,10 +118,24 @@ export class TaskEither<L, R> {
     );
   }
 
-  map<T>(f: (r: R) => T): TaskEither<L, T> {
+  execute<T>(f: (e?: any) => T, g: (value: R) => T): Promise<T> {
+    return this.fold(
+      (l) => f(l),
+      (r) => g(r)
+    );
+  }
+
+  apply<B>(mb: Monad<MapFn<R, B>>): Monad<B> {
+    return TaskEither.from(async () => {
+      const [fn, value] = await Promise.all([mb.getAsync(), this.effect()]);
+      return value.map(fn);
+    });
+  }
+
+  map<T>(f: MapFn<R, T>): TaskEither<L, T> {
     return new TaskEither(() =>
-      this.run()
-        .then((either) =>
+      this.effect()
+        .then(async (either) =>
           either.fold(
             (l) => Promise.resolve(new Left(l) as Either<L, T>),
             (r) => Promise.resolve(new Right(f(r)) as Either<L, T>)
@@ -126,7 +147,7 @@ export class TaskEither<L, R> {
 
   tap(f: (r: R) => void): TaskEither<L, R> {
     return new TaskEither(() =>
-      this.run().then((either) =>
+      this.effect().then(async (either) =>
         either.fold(
           (l) => Promise.resolve(new Left(l) as Either<L, R>),
           async (r) => {
@@ -140,10 +161,10 @@ export class TaskEither<L, R> {
 
   chain<T>(f: (r: R) => TaskEither<L, T>): TaskEither<L, T> {
     return new TaskEither(() =>
-      this.run().then((either) =>
+      this.effect().then(async (either) =>
         either.fold(
           (l) => Promise.resolve(new Left(l)),
-          (r) => f(r).run()
+          (r) => f(r).effect()
         )
       )
     );
@@ -151,9 +172,9 @@ export class TaskEither<L, R> {
 
   chainLeft<T>(f: (l: L) => TaskEither<T, R>): TaskEither<T, R> {
     return new TaskEither(() =>
-      this.run().then((either) =>
+      this.effect().then(async (either) =>
         either.fold(
-          (l) => f(l).run(),
+          (l) => f(l).effect(),
           (r) => Promise.resolve(new Right(r))
         )
       )
@@ -161,7 +182,7 @@ export class TaskEither<L, R> {
   }
 
   async getOrElse(defaultValue: R): Promise<R> {
-    const either = await this.run();
+    const either = await this.effect();
     return either.fold(
       () => defaultValue,
       (r) => r
@@ -169,15 +190,23 @@ export class TaskEither<L, R> {
   }
 
   async getOrElseThrow(defaultLeft?: L): Promise<R> {
-    const either = await this.run();
+    const either = await this.effect();
     return either.fold(
       (l) => Promise.reject(l ?? defaultLeft ?? ("Error from TaskEither" as L)) as R,
       (r) => r
     );
   }
 
+  async getAsync(): Promise<R> {
+    return this.effect().then((either) => either.getAsync());
+  }
+
+  async getAsyncOrElse(f: (e?: any) => R): Promise<R> {
+    return this.effect().then((either) => either.getAsyncOrElse(f));
+  }
+
   async toPrimitive(): Promise<PrimitiveEither<L, R>> {
-    return this.run().then((either) => either.toPrimitive());
+    return this.effect().then((either) => either.toPrimitive());
   }
 }
 

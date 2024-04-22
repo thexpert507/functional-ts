@@ -1,7 +1,7 @@
 import { Either } from "../either/Either";
 import { Reader } from "../reader";
-import { TaskEither } from "../TaskEither";
-import { TaskIO } from "../TaskIO";
+import { TaskEither } from "../either/TaskEither";
+import { TaskIO } from "../io/TaskIO";
 
 type F<A, B> = (a: NonNullable<A>) => B;
 
@@ -38,7 +38,10 @@ export class TaskReader<R, A> {
     return new TaskReader(async (r: R) => r);
   }
 
-  static apply<C, A, B>(f: TaskReader<C, F<A, B>>, mb: TaskReader<C, NonNullable<A>>): TaskReader<C, B> {
+  static apply<C, A, B>(
+    f: TaskReader<C, F<A, B>>,
+    mb: TaskReader<C, NonNullable<A>>
+  ): TaskReader<C, B> {
     return new TaskReader(async (r: C) => {
       const fn = await f.run(r);
       const value = await mb.run(r);
@@ -80,6 +83,9 @@ export const readerTask = TaskReader.fromTaskIO;
 export const readerTaskEither = TaskReader.fromTaskEither;
 export const applyTaskReader = TaskReader.apply;
 
-export function readerTaskMapContext<C, C2, A>(mapFn: (r: C) => C2, reader: TaskReader<C2, A>): TaskReader<C, A> {
+export function readerTaskMapContext<C, C2, A>(
+  mapFn: (r: C) => C2,
+  reader: TaskReader<C2, A>
+): TaskReader<C, A> {
   return TaskReader.from((r) => reader.run(mapFn(r)));
 }

@@ -45,7 +45,9 @@ test("Maybe map object", ({ expect }) => {
   expect(mappedInstance.isNothing()).toBe(false);
   expect(mappedInstance.get()?.name).toBe("test mapped");
 
-  const maybeNullInstance = mappedInstance.map((value) => value.data.firstValue).map((value) => value + " mapped");
+  const maybeNullInstance = mappedInstance
+    .map((value) => value.data.firstValue)
+    .map((value) => value + " mapped");
   expect(maybeNullInstance.isNothing()).toBe(true);
   expect(maybeNullInstance.getOrElse("default")).toBe("default");
 });
@@ -96,12 +98,15 @@ test("Maybe apply", ({ expect }) => {
   expect(appliedInstance.get()).toBe("test applied");
 
   const maybeNullInstance = Maybe.of((value: string) => value + " applied");
-  const appliedNullInstance = Maybe.apply(maybeNullInstance, Maybe.of<string | null>(null));
+  const appliedNullInstance = Maybe.apply(maybeNullInstance, Maybe.of<string>(null as any));
   expect(appliedNullInstance.isNothing()).toBe(true);
   expect(appliedNullInstance.getOrElse("default")).toBe("default");
 
   const maybeUndefinedInstance = Maybe.of((value: string) => value + " applied");
-  const appliedUndefinedInstance = Maybe.apply(maybeUndefinedInstance, Maybe.of<string | undefined>(undefined));
+  const appliedUndefinedInstance = Maybe.apply(
+    maybeUndefinedInstance,
+    Maybe.of<string>(undefined as any)
+  );
   expect(appliedUndefinedInstance.isNothing()).toBe(true);
   expect(appliedUndefinedInstance.getOrElse("default")).toBe("default");
 });

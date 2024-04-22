@@ -17,7 +17,9 @@ export class MaybeReaderT<R, A> implements IReaderT<R, A> {
   }
 
   chain<B>(f: (a: A) => IReaderT<R, B>) {
-    return new MaybeReaderT((r: R) => this.run(r).chain<B>((a) => f(a).fold(r, () => nothing(), maybe)));
+    return new MaybeReaderT((r: R) =>
+      this.run(r).chain<B>((a) => f(a).fold(r, () => nothing(), maybe))
+    );
   }
 
   fold<B>(ctx: R, onLeft: (e?: unknown) => B, onRight: (a: A) => B): B {

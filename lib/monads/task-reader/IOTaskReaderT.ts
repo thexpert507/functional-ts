@@ -1,5 +1,5 @@
-import { TaskEither } from "../TaskEither";
-import { TaskIO } from "../TaskIO";
+import { TaskEither } from "../either/TaskEither";
+import { TaskIO } from "../io/TaskIO";
 import { Either, left, right } from "../either";
 import { TaskReaderT } from "./TaskReaderT";
 
@@ -40,7 +40,11 @@ export class IOTaskReaderT<R, A> implements TaskReaderT<R, A> {
 
   toEither<E = unknown>(ctx: R, mapErr?: (err: unknown) => E): TaskEither<E, A> {
     return TaskEither.from(() => {
-      return this.fold(ctx, (e): Either<E, A> => (mapErr ? left<E>(mapErr(e)) : left<E>(e as any)), right);
+      return this.fold(
+        ctx,
+        (e): Either<E, A> => (mapErr ? left<E>(mapErr(e)) : left<E>(e as any)),
+        right
+      );
     });
   }
 }

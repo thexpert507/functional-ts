@@ -1,8 +1,11 @@
+import { MapFn } from "../free";
+import { Monad } from "../types/Monad";
+
 export type PrimitiveEither<L, R> = { isRight: boolean; value: L | R };
 
 type F<A, B> = (a: NonNullable<A>) => B;
 
-export abstract class Either<L, R> {
+export abstract class Either<L, R> implements Monad<R> {
   static apply<L, A, B>(ab: Either<L, F<A, B>>, mb: Either<L, NonNullable<A>>): Either<L, B> {
     return ab.isRight() && mb.isRight()
       ? right(ab.right()!(mb.right()!))
@@ -15,6 +18,8 @@ export abstract class Either<L, R> {
 
   abstract fold<T>(left: (l: L) => T, right: (r: R) => T): T;
 
+  abstract execute<T>(f: (e?: any) => T, g: (value: R) => T): Promise<T>;
+
   abstract left(): L | undefined;
 
   abstract right(): R | undefined;
@@ -25,9 +30,17 @@ export abstract class Either<L, R> {
   abstract tapLeft(f: (l: L) => void): Either<L, R>;
   abstract tapRight(f: (r: R) => void): Either<L, R>;
 
+  abstract tap(f: (a: R) => void): Monad<R>;
+
   abstract map<T>(f: (r: R) => T): Either<L, T>;
 
   abstract chain<T>(f: (r: R) => Either<L, T>): Either<L, T>;
+
+  abstract getAsync(): Promise<R>;
+
+  abstract getAsyncOrElse(f: (e?: any) => R): Promise<R>;
+
+  abstract apply<B>(mb: Monad<MapFn<R, B>>): Monad<B>;
 
   abstract toPrimitive(): PrimitiveEither<L, R>;
 
@@ -38,6 +51,22 @@ export abstract class Either<L, R> {
 export class Left<L> extends Either<L, never> {
   fold<T>(left: (l: L) => T, right: (r: never) => T): T {
     return left(this.value);
+  }
+
+  execute<T>(f: (e?: any) => T, g: (value: never) => T): Promise<T> {
+    return Promise.resolve(f(this.value));
+  }
+
+  getAsync(): Promise<never> {
+    return Promise.reject(this.value);
+  }
+
+  getAsyncOrElse(f: (e?: any) => never): Promise<never> {
+    return Promise.resolve(f(this.value));
+  }
+
+  apply<B>(mb: Monad<MapFn<never, B>>): Monad<B> {
+    return this as unknown as Monad<B>;
   }
 
   left(): L | undefined {
@@ -54,6 +83,10 @@ export class Left<L> extends Either<L, never> {
 
   isRight(): boolean {
     return false;
+  }
+
+  tap(f: (a: never) => void): Monad<never> {
+    return this as unknown as Monad<never>;
   }
 
   tapLeft(f: (l: L) => void): Either<L, never> {
@@ -91,6 +124,22 @@ export class Right<R> extends Either<never, R> {
     return right(this.value);
   }
 
+  execute<T>(f: (e?: any) => T, g: (value: R) => T): Promise<T> {
+    return Promise.resolve(g(this.value));
+  }
+
+  apply<B>(mb: Monad<MapFn<R, B>>): Monad<B> {
+    return mb.map((f) => f(this.value));
+  }
+
+  getAsync(): Promise<R> {
+    return Promise.resolve(this.value);
+  }
+
+  getAsyncOrElse(f: (e?: any) => R): Promise<R> {
+    return Promise.resolve(this.value);
+  }
+
   left(): never {
     return undefined as never;
   }
@@ -105,6 +154,11 @@ export class Right<R> extends Either<never, R> {
 
   isRight(): boolean {
     return true;
+  }
+
+  tap(f: (a: R) => void): Monad<R> {
+    f(this.value);
+    return this;
   }
 
   tapLeft(f: (l: never) => void): Either<never, R> {

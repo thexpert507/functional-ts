@@ -10,18 +10,18 @@ test("Either Left and Right creation", ({ expect }) => {
   expect(rightInstance.right()).toBe("success");
 });
 
-test("Either fold", ({ expect }) => {
+test("Either fold", async ({ expect }) => {
   const leftInstance = left("error");
   const rightInstance = right("success");
 
   expect(
-    leftInstance.fold(
+    await leftInstance.fold(
       (l) => l,
       (r) => r
     )
   ).toBe("error");
   expect(
-    rightInstance.fold(
+    await rightInstance.fold(
       (l) => l,
       (r) => r
     )

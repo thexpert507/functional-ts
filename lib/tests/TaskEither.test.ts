@@ -1,7 +1,7 @@
 // TaskEither.test.ts
 import { test } from "vitest";
 import { Suite, Deferred } from "benchmark";
-import { TaskEither, applyTaskEither } from "../monads/TaskEither";
+import { TaskEither, applyTaskEither } from "../monads/either/TaskEither";
 import { left, right } from "../monads";
 
 test("TaskEither.fromPrimitives", async ({ expect }) => {
@@ -73,7 +73,9 @@ test("TaskEither.chain reject", async ({ expect }) => {
 });
 
 test("TaskEither.chainLeft resolve", async ({ expect }) => {
-  const taskEitherInstance = TaskEither.from<string, string>(() => Promise.resolve(left("first error")));
+  const taskEitherInstance = TaskEither.from<string, string>(() =>
+    Promise.resolve(left("first error"))
+  );
   const chainedInstance = taskEitherInstance.chainLeft((l) => TaskEither.right("Hello"));
   const result = await chainedInstance.getOrElse("error");
   expect(result).toBe("Hello");
@@ -120,7 +122,9 @@ test("TaskEither.getOrElse", async ({ expect }) => {
 });
 
 test("TaskEither.getOrElse either left", async ({ expect }) => {
-  const taskEitherInstance = TaskEither.from<string, string>(() => Promise.resolve(left("first error")));
+  const taskEitherInstance = TaskEither.from<string, string>(() =>
+    Promise.resolve(left("first error"))
+  );
   const result = await taskEitherInstance.getOrElse("default");
   expect(result).toBe("default");
 });
@@ -153,7 +157,9 @@ test.skip(
         .add("TaskEither.getOrElseThrow resolve", {
           defer: true,
           fn: async (deferred: Deferred) => {
-            const taskEitherInstance = TaskEither.from<string, string>(() => Promise.resolve(right("test")));
+            const taskEitherInstance = TaskEither.from<string, string>(() =>
+              Promise.resolve(right("test"))
+            );
             await taskEitherInstance.getOrElseThrow("error");
             deferred.resolve();
           },
@@ -161,7 +167,9 @@ test.skip(
         .add("TaskEither.getOrElseThrow reject", {
           defer: true,
           fn: async (deferred: Deferred) => {
-            const taskEitherInstance = TaskEither.from<string, string>(() => Promise.resolve(left("error")));
+            const taskEitherInstance = TaskEither.from<string, string>(() =>
+              Promise.resolve(left("error"))
+            );
             await taskEitherInstance.getOrElse("default error");
             deferred.resolve();
           },
@@ -203,7 +211,9 @@ test("TaskEither sequence", async ({ expect }) => {
 });
 
 test("TaskEither apply", async ({ expect }) => {
-  const taskEitherInstance = TaskEither.from<string, (a: number) => number>(async () => right((a: number) => a + 1));
+  const taskEitherInstance = TaskEither.from<string, (a: number) => number>(async () =>
+    right((a: number) => a + 1)
+  );
   const numberInstance = TaskEither.from<string, number>(() => Promise.resolve(right(1)));
   const appliedInstance = TaskEither.appply(taskEitherInstance, numberInstance);
   const result = await appliedInstance.getOrElseThrow();

@@ -1,14 +1,16 @@
 import { Either, left, right } from "../either/Either";
+import { MapFn } from "../free";
+import { Monad } from "../types/Monad";
 
-type F<A, B> = (a: NonNullable<A>) => B;
-
-export class Maybe<T> {
+export class Maybe<T> implements Monad<T> {
   static of<T>(value: T): Maybe<T> {
     return new Maybe(value);
   }
 
-  static apply<A, B>(f: Maybe<F<A, B>>, a: Maybe<A>): Maybe<B> {
-    return f.isNothing() || a.isNothing() ? Maybe.of(null as B) : Maybe.of<B>(f.value(a.value as NonNullable<A>));
+  static apply<A, B>(f: Maybe<MapFn<A, B>>, a: Maybe<A>): Maybe<B> {
+    return f.isNothing() || a.isNothing()
+      ? Maybe.of(null as B)
+      : Maybe.of<B>(f.value(a.value as NonNullable<A>));
   }
 
   private constructor(private value: T) {}
@@ -26,7 +28,11 @@ export class Maybe<T> {
     return this.isNothing() ? Maybe.of(null as B) : Maybe.of<B>(f(this.value as NonNullable<T>));
   }
 
-  ap<B>(this: Maybe<F<T, B>>, mb: Maybe<NonNullable<T>>): Maybe<B> {
+  apply<B>(mb: Monad<MapFn<T, B>>): Monad<B> {
+    return this.isNothing() ? Maybe.of(null as B) : mb.map((f) => f(this.value as NonNullable<T>));
+  }
+
+  ap<B>(this: Maybe<MapFn<T, B>>, mb: Maybe<NonNullable<T>>): Maybe<B> {
     return Maybe.apply(this, mb);
   }
 
@@ -38,8 +44,21 @@ export class Maybe<T> {
     return this.map(f).join() as Maybe<B>;
   }
 
+  getAsync(): Promise<T> {
+    return Promise.resolve(this.value);
+  }
+
+  getAsyncOrElse(f: (e?: any) => T): Promise<T> {
+    return this.isNothing() ? Promise.resolve(f()) : Promise.resolve(this.value);
+  }
+
   getOrElse(defaultValue: NonNullable<T>): NonNullable<T> {
     return this.isNothing() ? defaultValue : (this.value as NonNullable<T>);
+  }
+
+  getOrThrow(error: unknown): NonNullable<T> {
+    if (this.isNothing()) throw error;
+    return this.value as NonNullable<T>;
   }
 
   get(): NonNullable<T> | null {
@@ -50,8 +69,18 @@ export class Maybe<T> {
     return this.isNothing() ? left(leftValue) : right(this.value as NonNullable<T>);
   }
 
-  fold<R>(f: () => R, g: (value: NonNullable<T>) => R): R {
-    return this.isNothing() ? f() : g(this.value as NonNullable<T>);
+  execute<R>(f: () => R, g: (value: NonNullable<T>) => R): Promise<R> {
+    return this.isNothing()
+      ? Promise.resolve(f())
+      : Promise.resolve(g(this.value as NonNullable<T>));
+  }
+
+  fold<R>(onLeft: (e?: unknown) => R, onRight: (a: NonNullable<T>) => R): R {
+    return this.isNothing() ? onLeft() : onRight(this.value as NonNullable<T>);
+  }
+
+  toMonad(): Monad<T> {
+    return this;
   }
 }
 

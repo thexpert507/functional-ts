@@ -1,12 +1,14 @@
-import { Either, left, right } from "./either/Either";
-import { maybe } from "./maybe/Maybe";
-import { TaskEither } from "./TaskEither";
+import { Either, left, right } from "../either/Either";
+import { maybe } from "../maybe/Maybe";
+import { TaskEither } from "../either/TaskEither";
+import { Monad } from "../types/Monad";
+import { MapFn } from "../free";
 
 type Effect<T> = () => Promise<T>;
 
 type F<A, B> = (a: NonNullable<A>) => B;
 
-export class TaskIO<T> {
+export class TaskIO<T> implements Monad<T> {
   static from<R>(effect: Effect<R>): TaskIO<R> {
     return new TaskIO(effect);
   }
@@ -33,10 +35,35 @@ export class TaskIO<T> {
     });
   }
 
+  static all<T>(tasks: TaskIO<T>[]): TaskIO<T[]> {
+    return new TaskIO(async () => {
+      return Promise.all(tasks.map((task) => task.run()));
+    });
+  }
+
   constructor(private effect: Effect<T>) {}
+
+  execute<R>(f: (e?: any) => R, g: (value: T) => R): Promise<R> {
+    return this.effect().then(g).catch(f);
+  }
 
   async run(): Promise<T> {
     return this.effect();
+  }
+
+  apply<B>(mb: Monad<MapFn<T, B>>): Monad<B> {
+    return new TaskIO(async () => {
+      const [fn, value] = await Promise.all([mb.getAsync(), this.run()]);
+      return fn(value);
+    });
+  }
+
+  getAsync(): Promise<T> {
+    return this.run();
+  }
+
+  getAsyncOrElse(f: (e?: any) => T): Promise<T> {
+    return this.run().catch(f);
   }
 
   map<R>(f: (wrapped: T) => R | Promise<R>): TaskIO<R> {
@@ -51,8 +78,8 @@ export class TaskIO<T> {
     });
   }
 
-  chain<R>(f: (wrapped: T) => TaskIO<R>): TaskIO<R> {
-    return new TaskIO(async () => f(await this.run()).run());
+  chain<R>(f: (wrapped: T) => Monad<R>): TaskIO<R> {
+    return new TaskIO(async () => f(await this.run()).getAsync());
   }
 
   toEither<L = never>(mapError?: (err: any) => L): TaskEither<L, T> {
@@ -66,6 +93,10 @@ export class TaskIO<T> {
               .getOrElse(left(error))
         )
     );
+  }
+
+  fold<R>(f: (e?: any) => R, g: (value: T) => R): Promise<R> {
+    return this.run().then(g).catch(f);
   }
 }
 

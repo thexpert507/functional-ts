@@ -1,4 +1,4 @@
-import { TaskEither } from "../TaskEither";
+import { TaskEither } from "../either/TaskEither";
 
 export abstract class TaskReaderT<R, A, Monad = unknown> {
   abstract map<B>(f: (a: A) => B): TaskReaderT<R, B>;
