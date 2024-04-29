@@ -1,6 +1,7 @@
 // TaskIO.test.ts
 import { test } from "vitest";
 import { TaskIO } from "../monads/io/TaskIO";
+import { TaskEither } from "../monads";
 
 test("TaskIO constructor and run", async ({ expect }) => {
   const taskIOInstance = new TaskIO(() => Promise.resolve("test"));
@@ -16,6 +17,12 @@ test("TaskIO map", async ({ expect }) => {
 test("TaskIO chain", async ({ expect }) => {
   const taskIOInstance = new TaskIO(() => Promise.resolve("test"));
   const chainedInstance = taskIOInstance.chain((v) => TaskIO.of(v + " chained"));
+  expect(await chainedInstance.run()).toBe("test chained");
+});
+
+test("TaskIO chain either", async ({ expect }) => {
+  const taskIOInstance = new TaskIO(() => Promise.resolve("test"));
+  const chainedInstance = taskIOInstance.chain((v) => TaskEither.right(v + " chained"));
   expect(await chainedInstance.run()).toBe("test chained");
 });
 

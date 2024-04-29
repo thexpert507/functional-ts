@@ -54,8 +54,9 @@ export class TaskEither<L, R> implements Monad<R> {
   }
 
   static of<L, R>(value: Either<L, R>): TaskEither<L, R> {
+    if (!(value instanceof Either)) throw new Error("Invalid value from TaskEither.of");
     const evaluatedValue = maybe(value).getOrElse(left("Invalid value from TaskEither.of" as L));
-    return new TaskEither(() => Promise.resolve(evaluatedValue));
+    return new TaskEither(async () => evaluatedValue);
   }
 
   static right<L, R>(value: R): TaskEither<L, R> {
@@ -71,8 +72,7 @@ export class TaskEither<L, R> implements Monad<R> {
     mb: TaskEither<L, NonNullable<A>>
   ): TaskEither<L, B> {
     return TaskEither.from<L, B>(async (): Promise<Either<L, B>> => {
-      const eitherFn = await f.effect();
-      const eitherValue = await mb.effect();
+      const [eitherFn, eitherValue] = await Promise.all([f.effect(), mb.effect()]);
 
       if (eitherFn.isLeft()) return left(eitherFn.left()!);
       if (eitherValue.isLeft()) return left(eitherValue.left()!);
@@ -87,7 +87,12 @@ export class TaskEither<L, R> implements Monad<R> {
   constructor(public readonly effect: () => Promise<Either<L, R>>) {}
 
   async fold<T>(left: (l: L) => T, right: (r: R) => T): Promise<T> {
-    return this.effect().then((either) => either.fold(left, right));
+    return this.effect().then((either) =>
+      either.fold(
+        (e) => left(e),
+        (r) => right(r)
+      )
+    );
   }
 
   left(): Promise<L | undefined> {
@@ -152,30 +157,38 @@ export class TaskEither<L, R> implements Monad<R> {
           (l) => Promise.resolve(new Left(l) as Either<L, R>),
           async (r) => {
             f(r);
-            return new Right(r);
+            return right(r);
           }
         )
       )
     );
   }
 
-  chain<T>(f: (r: R) => TaskEither<L, T>): TaskEither<L, T> {
+  chain<T>(f: (r: R) => Monad<T>): TaskEither<L, T> {
     return new TaskEither(() =>
       this.effect().then(async (either) =>
         either.fold(
           (l) => Promise.resolve(new Left(l)),
-          (r) => f(r).effect()
+          (r) =>
+            f(r)
+              .getAsync()
+              .then((value) => right(value))
+              .catch(handleError)
         )
       )
     );
   }
 
-  chainLeft<T>(f: (l: L) => TaskEither<T, R>): TaskEither<T, R> {
+  chainLeft<T>(f: (l: L) => Monad<R>): TaskEither<T, R> {
     return new TaskEither(() =>
       this.effect().then(async (either) =>
         either.fold(
-          (l) => f(l).effect(),
-          (r) => Promise.resolve(new Right(r))
+          (l) =>
+            f(l)
+              .getAsync()
+              .then((value) => right(value))
+              .catch(handleError),
+          (r) => Promise.resolve(right(r))
         )
       )
     );

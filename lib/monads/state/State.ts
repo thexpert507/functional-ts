@@ -1,55 +1,58 @@
-export const Pair = <A, B>(a: A, b: B) => [a, b] as [A, B];
+import { Pair, pair } from "./Pair";
+
+type SubFn<A> = (value: A) => void;
 
 export class State<S, A> {
   static of<S, A>(a: A): State<S, A> {
-    return new State<S, A>((s) => Pair(a, s));
+    return new State<S, A>((s) => pair(a, s));
   }
 
-  static from<S, A>(fn: (s: S) => [A, S]): State<S, A> {
+  static from<S, A>(fn: (s: S) => Pair<A, S>): State<S, A> {
     return new State<S, A>(fn);
   }
 
-  private constructor(public run: (s: S) => [A, S]) {}
+  private constructor(public run: (s: S) => Pair<A, S>, private subscribers: SubFn<S>[] = []) {}
+
+  private emit(s: S) {
+    this.subscribers.forEach((sub) => sub(s));
+  }
 
   map<B>(f: (a: A) => B): State<S, B> {
     return new State<S, B>((s) => {
-      const [a, s1] = this.run(s);
-      return Pair(f(a), s1);
-    });
+      return this.run(s)
+        .tapEffect((s) => this.emit(s))
+        .mapValue(f);
+    }, this.subscribers);
   }
 
   tap(f: (a: A) => void): State<S, A> {
-    return new State<S, A>((s) => {
-      const [a, s1] = this.run(s);
-      f(a);
-      return Pair(a, s1);
-    });
+    return new State<S, A>((s) => this.run(s).tap(f), this.subscribers);
   }
 
   tapEffect(f: (s: S) => void): State<S, A> {
-    return new State<S, A>((s) => {
-      const [a, s1] = this.run(s);
-      f(s1);
-      return Pair(a, s1);
-    });
+    return new State<S, A>((s) => this.run(s).tapEffect(f), this.subscribers);
   }
 
   chain<B>(f: (a: A) => State<S, B>): State<S, B> {
     return new State<S, B>((s) => {
-      const [a, s1] = this.run(s);
-      return f(a).run(s1);
-    });
+      const pair = this.run(s);
+      return f(pair.value).run(pair.state);
+    }, this.subscribers);
   }
 
-  runWith(s: S): [A, S] {
-    return this.run(s);
+  runWith(s: S): Pair<A, S> {
+    return this.run(s).tapEffect((s) => this.emit(s));
   }
 
   evalWith(s: S): A {
-    return this.run(s)[0];
+    return this.runWith(s).value;
   }
 
   execWith(s: S): S {
-    return this.run(s)[1];
+    return this.runWith(s).state;
+  }
+
+  subscribe(observer: (value: S) => void) {
+    return this.subscribers.push(observer);
   }
 }

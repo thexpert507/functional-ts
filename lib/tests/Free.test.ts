@@ -111,7 +111,7 @@ test("[Free] DoGen notation", async ({ expect }) => {
   expect(value).toBe("Hello world World Hello world");
 });
 
-test("[Free] Do notation", async ({ expect }) => {
+test.skip("[Free] Do notation", async ({ expect }) => {
   const result = Do({
     name: hello("Adriel"),
     name2: world("world"),

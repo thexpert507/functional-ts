@@ -2,7 +2,7 @@
 import { test } from "vitest";
 import { Suite, Deferred } from "benchmark";
 import { TaskEither, applyTaskEither } from "../monads/either/TaskEither";
-import { left, right } from "../monads";
+import { TaskIO, left, right } from "../monads";
 
 test("TaskEither.fromPrimitives", async ({ expect }) => {
   const data = right("test");
@@ -58,6 +58,15 @@ test("TaskEither.chain resolve", async ({ expect }) => {
   const taskEitherInstance = TaskEither.from(() => Promise.resolve(right("test")));
   const chainedInstance = taskEitherInstance.chain((r) =>
     TaskEither.from(() => Promise.resolve(right(r + " chained")))
+  );
+  const result = await chainedInstance.getOrElse("error");
+  expect(result).toBe("test chained");
+});
+
+test("TaskEither.chain IO", async ({ expect }) => {
+  const taskEitherInstance = TaskEither.from(() => Promise.resolve(right("test")));
+  const chainedInstance = taskEitherInstance.chain((r) =>
+    TaskIO.from(() => Promise.resolve(r + " chained"))
   );
   const result = await chainedInstance.getOrElse("error");
   expect(result).toBe("test chained");

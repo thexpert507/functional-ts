@@ -79,7 +79,16 @@ export class TaskIO<T> implements Monad<T> {
   }
 
   chain<R>(f: (wrapped: T) => Monad<R>): TaskIO<R> {
-    return new TaskIO(async () => f(await this.run()).getAsync());
+    return new TaskIO(async () => {
+      return this.fold(
+        (e) => Promise.reject(e),
+        (value) =>
+          f(value).execute(
+            (e) => Promise.reject(e),
+            (value) => Promise.resolve(value)
+          )
+      );
+    });
   }
 
   toEither<L = never>(mapError?: (err: any) => L): TaskEither<L, T> {
