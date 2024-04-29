@@ -1,6 +1,6 @@
 // TaskIO.test.ts
 import { test } from "vitest";
-import { TaskIO } from "../monads/io/TaskIO";
+import { TaskIO } from "../monads";
 import { TaskEither } from "../monads";
 
 test("TaskIO constructor and run", async ({ expect }) => {
