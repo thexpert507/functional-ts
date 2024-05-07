@@ -1,16 +1,16 @@
 {
   "name": "monads-ts",
   "private": false,
-  "version": "1.1.3",
+  "version": "1.1.4",
   "type": "module",
   "exports": {
     ".": {
-      "require": "./dist/cjs/main.js",
+      "require": "./dist/cjs/main.cjs",
       "import": "./dist/es/main.js",
       "types": "./dist/index.d.ts"
     },
     "./do": {
-      "require": "./dist/cjs/do.js",
+      "require": "./dist/cjs/do.cjs",
       "import": "./dist/es/do.js",
       "types": "./dist/monads/do/index.d.ts"
     }
