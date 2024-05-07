@@ -1,17 +1,27 @@
 {
   "name": "monads-ts",
   "private": false,
-  "version": "1.1.1",
+  "version": "1.1.2",
   "type": "module",
   "exports": {
-    "require": "./dist/main.umd.cjs",
-    "import": "./dist/main.js",
-    "types": "./dist/index.d.ts"
+    ".": {
+      "require": "./dist/cjs/main.js",
+      "import": "./dist/es/main.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./do": {
+      "require": "./dist/cjs/do.js",
+      "import": "./dist/es/do.js",
+      "types": "./dist/monads/do/index.d.ts"
+    }
   },
   "typesVersions": {
     "*": {
       "*": [
         "./dist/index.d.ts"
+      ],
+      "do": [
+        "./dist/monads/do/index.d.ts"
       ]
     }
   },
@@ -27,6 +37,7 @@
     "prepublish": "pnpm test && pnpm build"
   },
   "devDependencies": {
+    "@chialab/esbuild-plugin-commonjs": "^0.18.0",
     "@types/benchmark": "^2.1.5",
     "@types/node": "18.15.11",
     "@vitest/ui": "^1.4.0",
