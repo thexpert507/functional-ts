@@ -17,7 +17,7 @@ export class TaskEither<L, R> implements Monad<R> {
     if (arr.length === 0) return TaskEither.right<L, R[]>([]);
 
     const result = arr.reduce((acc, curr) => {
-      return acc.chain((accVal) =>
+      return acc.bind((accVal) =>
         TaskEither.from(() =>
           curr.fold<Either<L, R[]>>(
             (l) => left(l) as Either<L, R[]>,
@@ -175,7 +175,7 @@ export class TaskEither<L, R> implements Monad<R> {
     );
   }
 
-  chain<T>(f: (r: R) => Monad<T>): TaskEither<L, T> {
+  chain<T>(f: (r: R) => Monad<T>): Monad<T> {
     return new TaskEither(() =>
       this.effect().then(async (either) =>
         either.fold(
