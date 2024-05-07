@@ -15,7 +15,14 @@ export default defineConfig({
       },
       name: "monads-ts",
       // the proper extensions will be added
-      fileName: (format, chunk) => `${format}/${chunk}.js`,
+      fileName: (format, chunk) => {
+        // Si el formato es 'cjs', cambia la extensión a '.cjs'
+        if (format === "cjs") {
+          return `${format}/${chunk}.cjs`;
+        }
+        // De lo contrario, usa '.js'
+        return `${format}/${chunk}.js`;
+      },
     },
   },
   plugins: [dts(), commonjsPlugin()],
