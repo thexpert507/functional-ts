@@ -164,6 +164,17 @@ export class TaskEither<L, R> implements Monad<R> {
     );
   }
 
+  bind<T>(f: (r: R) => TaskEither<L, T>): TaskEither<L, T> {
+    return new TaskEither(() =>
+      this.effect().then(async (either) =>
+        either.fold(
+          (l) => Promise.resolve(new Left(l)),
+          (r) => f(r).effect()
+        )
+      )
+    );
+  }
+
   chain<T>(f: (r: R) => Monad<T>): TaskEither<L, T> {
     return new TaskEither(() =>
       this.effect().then(async (either) =>

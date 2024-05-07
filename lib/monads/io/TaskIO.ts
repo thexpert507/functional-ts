@@ -78,7 +78,13 @@ export class TaskIO<T> implements Monad<T> {
     });
   }
 
-  chain<R>(f: (wrapped: T) => Monad<R>): TaskIO<R> {
+  bind<R>(f: (wrapped: T) => TaskIO<R>): TaskIO<R> {
+    return new TaskIO(async () => {
+      return f(await this.run()).run();
+    });
+  }
+
+  chain<R>(f: (wrapped: T) => Monad<R>): Monad<R> {
     return new TaskIO(async () => {
       return this.fold(
         (e) => Promise.reject(e),
@@ -98,7 +104,7 @@ export class TaskIO<T> implements Monad<T> {
         .catch(
           (error): Either<L, T> =>
             maybe(mapError)
-              .map((f) => left(f(error)))
+              .map((f) => left(f?.(error) ?? error))
               .getOrElse(left(error))
         )
     );

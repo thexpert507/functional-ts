@@ -3,6 +3,8 @@ import { TaskEither } from "../either/TaskEither";
 import { MapFn } from "../free";
 import { Monad } from "../types";
 
+export type PickContext<R> = R extends ReaderT<infer C, any> ? C : never;
+
 export class ReaderT<R, A> {
   static from<R, A>(f: (r: R) => Monad<A>): ReaderT<R, A> {
     return new ReaderT(f);
@@ -38,8 +40,18 @@ export class ReaderT<R, A> {
     return new ReaderT((r: R) => this.run(r).chain((a) => f(a).run(r)));
   }
 
-  chainContext<C2, B>(mapFn: (r: R) => C2, fn: (a: A) => ReaderT<C2, B>): ReaderT<R, B> {
+  chainMapContext<C2, B>(mapFn: (r: R) => C2, fn: (a: A) => ReaderT<C2, B>): ReaderT<R, B> {
     return this.chain((a) => ReaderT.from((r: R) => fn(a).run(mapFn(r))));
+  }
+
+  chainContext<C2, B>(fn: (a: A) => ReaderT<C2, B>): ReaderT<C2 & R, B> {
+    return new ReaderT((r: C2 & R) => {
+      return this.run(r).chain((a) => ReaderT.from(() => fn(a).run(r)).run(r));
+    });
+  }
+
+  mapContext<R2>(mapFn: (r: R2) => R): ReaderT<R2, A> {
+    return new ReaderT((r: R2) => this.run(mapFn(r)));
   }
 
   toEither<E = unknown>(r: R, defaultLeft?: (e: any) => E): TaskEither<E, A> {

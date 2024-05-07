@@ -19,17 +19,17 @@ export class Maybe<T> implements Monad<T> {
     return this.value === null || this.value === undefined;
   }
 
-  tap(f: (a: NonNullable<T>) => void): Maybe<T> {
-    if (!this.isNothing()) f(this.value as NonNullable<T>);
+  tap(f: (a: T) => void): Maybe<T> {
+    if (!this.isNothing()) f(this.value);
     return this;
   }
 
-  map<B>(f: (a: NonNullable<T>) => B): Maybe<B> {
-    return this.isNothing() ? Maybe.of(null as B) : Maybe.of<B>(f(this.value as NonNullable<T>));
+  map<B>(f: (a: T) => B): Maybe<B> {
+    return this.isNothing() ? Maybe.of(null as B) : Maybe.of<B>(f(this.value));
   }
 
   apply<B>(mb: Monad<MapFn<T, B>>): Monad<B> {
-    return this.isNothing() ? Maybe.of(null as B) : mb.map((f) => f(this.value as NonNullable<T>));
+    return this.isNothing() ? Maybe.of(null as B) : mb.map((f) => f(this.value));
   }
 
   ap<B>(this: Maybe<MapFn<T, B>>, mb: Maybe<NonNullable<T>>): Maybe<B> {
@@ -40,8 +40,12 @@ export class Maybe<T> implements Monad<T> {
     return this.isNothing() ? Maybe.of(null as T) : this.value;
   }
 
-  chain<B>(f: (a: NonNullable<T>) => Maybe<B>): Maybe<B> {
-    return this.map(f).join() as Maybe<B>;
+  bind<B>(f: (a: T) => Maybe<B>): Maybe<B> {
+    return this.isNothing() ? Maybe.of(null as B) : f(this.value);
+  }
+
+  chain<B>(f: (a: T) => Monad<B>): Monad<B> {
+    return this.isNothing() ? Maybe.of(null as B) : f(this.value);
   }
 
   getAsync(): Promise<T> {

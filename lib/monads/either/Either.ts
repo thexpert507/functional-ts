@@ -34,7 +34,9 @@ export abstract class Either<L, R> implements Monad<R> {
 
   abstract map<T>(f: (r: R) => T): Either<L, T>;
 
-  abstract chain<T>(f: (r: R) => Either<L, T>): Either<L, T>;
+  abstract bind<T>(f: (r: R) => Either<L, T>): Either<L, T>;
+
+  abstract chain<T>(f: (r: R) => Monad<T>): Monad<T>;
 
   abstract getAsync(): Promise<R>;
 
@@ -102,7 +104,11 @@ export class Left<L> extends Either<L, never> {
     return this as unknown as Either<L, T>;
   }
 
-  chain<T>(f: (r: never) => Either<L, T>): Either<L, T> {
+  bind<T>(f: (r: never) => Either<L, T>): Either<L, T> {
+    return this as unknown as Either<L, T>;
+  }
+
+  chain<T>(f: (r: never) => Monad<T>): Monad<T> {
     return this as unknown as Either<L, T>;
   }
 
@@ -174,7 +180,11 @@ export class Right<R> extends Either<never, R> {
     return new Right(f(this.value));
   }
 
-  chain<T>(f: (r: R) => Either<never, T>): Either<never, T> {
+  bind<T>(f: (r: R) => Either<never, T>): Either<never, T> {
+    return f(this.value);
+  }
+
+  chain<T>(f: (r: R) => Monad<T>): Monad<T> {
     return f(this.value);
   }
 

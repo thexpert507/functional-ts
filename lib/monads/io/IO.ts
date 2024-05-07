@@ -12,6 +12,14 @@ export class IO<T> implements Monad<T> {
     return new IO(() => value);
   }
 
+  static from<R>(f: () => R): IO<R> {
+    return new IO(f);
+  }
+
+  static void(f: () => any): IO<void> {
+    return new IO(() => void f());
+  }
+
   static reject<R>(error: Error): IO<R> {
     return new IO(() => {
       throw error;
@@ -40,8 +48,12 @@ export class IO<T> implements Monad<T> {
     return new IO(() => f(this.run()));
   }
 
-  chain<R>(f: (wrapped: T) => IO<R>): IO<R> {
-    return new IO(() => f(this.run()).run());
+  bind<R>(f: (wrapped: T) => IO<R>): IO<R> {
+    return f(this.run());
+  }
+
+  chain<R>(f: (wrapped: T) => Monad<R>): Monad<R> {
+    return f(this.run());
   }
 
   fold<R>(f: () => R, g: (value: T) => R): R {
