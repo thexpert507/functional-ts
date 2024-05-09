@@ -1,5 +1,7 @@
+import { MapFn } from "../free";
 import { maybe } from "../maybe";
 import { Monad } from "../types";
+import { toEither } from "../utils";
 
 type RecordOfMonads = Record<string, Monad<any>>;
 type MonadRecord<T extends RecordOfMonads> = {
@@ -75,8 +77,20 @@ export class Do<A> {
     return new Do(bindedMonad);
   }
 
+  map<B>(fn: MapFn<A, B>): Do<B> {
+    return new Do(this.ctx.map(fn));
+  }
+
+  tap(fn: MapFn<A, void>): Do<A> {
+    return new Do(this.ctx.tap(fn));
+  }
+
   run(): Monad<A> {
     return this.ctx;
+  }
+
+  toEither<E>(left?: (e?: any) => E) {
+    return toEither(this.ctx, left);
   }
 }
 
