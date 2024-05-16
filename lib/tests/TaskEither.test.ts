@@ -56,7 +56,7 @@ test("TaskEither.fold", async ({ expect }) => {
 
 test("TaskEither.chain resolve", async ({ expect }) => {
   const taskEitherInstance = TaskEither.from(() => Promise.resolve(right("test")));
-  const chainedInstance = taskEitherInstance.chain((r) =>
+  const chainedInstance = taskEitherInstance.bind((r) =>
     TaskEither.from(() => Promise.resolve(right(r + " chained")))
   );
   const result = await chainedInstance.getOrElse("error");
@@ -68,13 +68,13 @@ test("TaskEither.chain IO", async ({ expect }) => {
   const chainedInstance = taskEitherInstance.chain((r) =>
     TaskIO.from(() => Promise.resolve(r + " chained"))
   );
-  const result = await chainedInstance.getOrElse("error");
+  const result = await chainedInstance.getAsyncOrElse(() => "error");
   expect(result).toBe("test chained");
 });
 
 test("TaskEither.chain reject", async ({ expect }) => {
   const taskEitherInstance = TaskEither.from(() => Promise.reject("first error"));
-  const chainedInstance = taskEitherInstance.chain((r) =>
+  const chainedInstance = taskEitherInstance.bind((r) =>
     TaskEither.from(() => Promise.resolve(right(r + " chained")))
   );
   const result = await chainedInstance.getOrElse("error");
@@ -217,6 +217,34 @@ test("TaskEither sequence", async ({ expect }) => {
     .getOrElseThrow()
     .catch((e) => e);
   expect(result).toMatchObject(["test 1", "test 2", "test 3"]);
+});
+
+test("TaskEither all", async ({ expect }) => {
+  const task1 = TaskEither.from(() => Promise.resolve(right("test 1")));
+  const task2 = TaskEither.from(() => Promise.resolve(right("test 2")));
+  const task3 = TaskEither.from(() => Promise.resolve(right("test 3")));
+  const result = await TaskEither.all([task1, task2, task3])
+    .getOrElseThrow()
+    .catch((e) => e);
+  expect(result).toMatchObject(["test 1", "test 2", "test 3"]);
+});
+
+test("TaskEither all with left", async ({ expect }) => {
+  const task1 = TaskEither.from(() => Promise.resolve(right("test 1")));
+  const task2 = TaskEither.from(() => Promise.resolve(left("error 2")));
+  const task3 = TaskEither.from(() => Promise.resolve(right("test 3")));
+  const result = await TaskEither.all([task1, task2, task3])
+    .getOrElseThrow()
+    .catch((e) => e);
+  expect(result).toBe("error 2");
+});
+
+test("TaskEither all settled", async ({ expect }) => {
+  const task1 = TaskEither.from(() => Promise.resolve(right("test 1")));
+  const task2 = TaskEither.from(() => Promise.reject("error 2"));
+  const task3 = TaskEither.from(() => Promise.resolve(right("test 3")));
+  const result = await TaskEither.allSettled([task1, task2, task3]).getOrElseThrow();
+  expect(result).toMatchObject([{ value: "test 1" }, { value: "error 2" }, { value: "test 3" }]);
 });
 
 test("TaskEither apply", async ({ expect }) => {

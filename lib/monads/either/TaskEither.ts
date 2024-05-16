@@ -14,20 +14,23 @@ type F<A, B> = (a: NonNullable<A>) => B;
 
 export class TaskEither<L, R> implements Monad<R> {
   static sequence<L, R>(arr: TaskEither<L, R>[]): TaskEither<L, R[]> {
-    if (arr.length === 0) return TaskEither.right<L, R[]>([]);
-
-    const result = arr.reduce((acc, curr) => {
+    return arr.reduce((acc, curr) => {
       return acc.bind((accVal) =>
-        TaskEither.from(() =>
-          curr.fold<Either<L, R[]>>(
-            (l) => left(l) as Either<L, R[]>,
-            (r) => right([...accVal, r]) as Either<L, R[]>
-          )
-        )
+        TaskEither.from(() => curr.fold<Either<L, R[]>>(left, (r) => right([...accVal, r])))
       );
     }, TaskEither.right<L, R[]>([]));
+  }
 
-    return result;
+  static all<L, R>(tasks: TaskEither<L, R>[]): TaskEither<L, R[]> {
+    return new TaskEither(async () => {
+      return await Promise.all(tasks.map((task) => task.getAsync())).then(right);
+    });
+  }
+
+  static allSettled<L, R>(tasks: TaskEither<L, R>[]): TaskEither<L, Either<L, R>[]> {
+    return new TaskEither(async () => {
+      return await Promise.all(tasks.map((task) => task.effect())).then(right);
+    });
   }
 
   private static parsePrimitiveEither<L, R>(value: any): PrimitiveEither<L, R> {
