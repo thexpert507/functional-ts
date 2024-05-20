@@ -28,8 +28,8 @@
     "prepublish": "pnpm build"
   },
   "dependencies": {
-    "@functional/core": "workspace:^",
-    "@functional/monads": "workspace:^"
+    "@functional-ts/core": "workspace:^",
+    "@functional-ts/monads": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "18.15.11",
