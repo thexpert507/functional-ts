@@ -31,10 +31,10 @@ importers:
 
   packages/http:
     dependencies:
-      '@functional/core':
+      '@functional-ts/core':
         specifier: workspace:^
         version: link:../core
-      '@functional/monads':
+      '@functional-ts/monads':
         specifier: workspace:^
         version: link:../monads
     devDependencies:
