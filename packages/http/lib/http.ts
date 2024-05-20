@@ -1,5 +1,5 @@
-import { AppError, toAppError } from "@functional/core";
-import { PrimitiveEither, ReaderT, TaskEither, TaskIO, readerT } from "@functional/monads";
+import { AppError, toAppError } from "@functional-ts/core";
+import { PrimitiveEither, ReaderT, TaskEither, TaskIO, readerT } from "@functional-ts/monads";
 
 const headers: HeadersInit = { "Content-Type": "application/json" };
 
