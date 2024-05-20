@@ -1,0 +1,34 @@
+{
+  "name": "@functional-ts/core",
+  "private": false,
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": {
+      "require": "./dist/cjs/main.cjs",
+      "import": "./dist/es/main.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "typesVersions": {
+    "<=0.0.0": {
+      "*": [
+        "./dist/index.d.ts"
+      ]
+    }
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "prepublish": "pnpm build"
+  },
+  "devDependencies": {
+    "@types/node": "18.15.11",
+    "@vitest/ui": "^1.4.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.2.0",
+    "vite-plugin-dts": "^3.7.3",
+    "vitest": "^1.4.0"
+  }
+}
