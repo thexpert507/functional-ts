@@ -14,7 +14,7 @@
 
 ## Monadas incluidas
 
-- `TaskIO`: Una monada para manejar efectos secundarios asíncronos.
+- `Task`: Una monada para manejar efectos secundarios asíncronos.
 - `TaskEither`: Una monada que combina `Task` y `Either` para manejar efectos secundarios asíncronos y errores.
 - `State`: Una monada que encapsula una transformación de estado.
 - `Maybe`: Una monada que puede representar un valor que puede existir o no.

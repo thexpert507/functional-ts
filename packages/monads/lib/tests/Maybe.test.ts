@@ -70,23 +70,23 @@ test("Maybe undefined", ({ expect }) => {
 
 test("Maybe chain", ({ expect }) => {
   const maybeInstance = Maybe.of("test");
-  const chainedInstance = maybeInstance.chain((value) => Maybe.of(value + " chained"));
+  const chainedInstance = maybeInstance.bind((value) => Maybe.of(value + " chained"));
   expect(chainedInstance.isNothing()).toBe(false);
   expect(chainedInstance.get()).toBe("test chained");
 
   const maybeNullInstance = Maybe.of<string | null>(null);
-  const chainedNullInstance = maybeNullInstance.chain((value) => Maybe.of(value));
+  const chainedNullInstance = maybeNullInstance.bind((value) => Maybe.of(value));
   expect(chainedNullInstance.isNothing()).toBe(true);
   expect(chainedNullInstance.getOrElse("default")).toBe("default");
 
   const maybeUndefinedInstance = Maybe.of<string | undefined>(undefined);
-  const chainedUndefinedInstance = maybeUndefinedInstance.chain((value) => Maybe.of(value));
+  const chainedUndefinedInstance = maybeUndefinedInstance.bind((value) => Maybe.of(value));
   expect(chainedUndefinedInstance.isNothing()).toBe(true);
   expect(chainedUndefinedInstance.getOrElse("default")).toBe("default");
 
   const obj = { name: "test", data: { firstValue: null as unknown as string } };
   const maybeObjInstance = Maybe.of(obj);
-  const chainedObjInstance = maybeObjInstance.chain((value) => Maybe.of(value.data.firstValue));
+  const chainedObjInstance = maybeObjInstance.bind((value) => Maybe.of(value.data.firstValue));
   expect(chainedObjInstance.isNothing()).toBe(true);
   expect(chainedObjInstance.getOrElse("default")).toBe("default");
 });

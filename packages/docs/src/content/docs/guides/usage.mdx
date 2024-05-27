@@ -1,0 +1,76 @@
+---
+title: Guía de uso
+description: Como para usar functional-ts en tu proyecto
+---
+
+Empezemos con un ejemplo simple. Supongamos que tenemos un objeto `user` con los datos
+de un usuario y queremos imprimir su nombre y su correo electrónico. El objeto `user`
+puede tener o no tener un correo electrónico, por lo que la propiedad `email` es opcional.
+
+```ts
+const user: User = {
+  name: 'John',
+  lastName: undefined,
+  age: 30,
+};
+
+console.log(`Correo electrónico de ${user.name}: ${user.email}`);
+```
+
+Este codigo es simple y funciona, pero tiene un problema. Si el usuario no tiene un correo
+electrónico, el mensaje impreso será `Correo electrónico de John: undefined`. Esto no es
+lo que queremos, ya que el usuario puede no tener un correo electrónico. Observemos el type `User`:
+
+```ts
+type User = {
+  name: string | undefined;
+  lastName: string | undefined;
+  age: number;
+  email?: string;
+};
+```
+
+El problema es que la propiedad `email` es opcional, por lo que su valor puede ser `undefined`.
+Para solucionar este problema, podemos usar el tipo `Maybe` de functional-ts. El tipo `Maybe`
+es un tipo que representa un valor que puede ser `null` o `undefined` o un valor de un tipo dado.
+
+```ts
+import { maybe } from '@functional-ts/monads';
+
+const user: User = {
+  name: 'John',
+  lastName: undefined,
+  age: 30,
+};
+
+const email = maybe(user.email).getOrElse('No tiene correo electrónico');
+
+console.log(`Correo electrónico de ${user.name}: ${email}`);
+```
+
+Ahora, si el usuario no tiene un correo electrónico, el mensaje impreso será `No tiene correo electrónico`.
+Esto es mucho mejor que imprimir `undefined`. Además, el código es más claro y fácil de entender.
+
+Pero porqué usar `maybe` en lugar de simplemente comprobar si `user.email` es `undefined`? La respuesta
+es que `maybe` nos permite encadenar operaciones de forma segura. Por ejemplo, supongamos que queremos
+imprimir el correo electrónico del usuario en mayúsculas. Podemos hacerlo de la siguiente manera:
+
+```ts
+import { maybe } from '@functional-ts/monads';
+
+const user: User = {
+  name: 'John',
+  lastName: undefined,
+  age: 30,
+};
+
+const email = maybe(user.email).map(email => email.toUpperCase()).getOrElse('No tiene correo electrónico');
+
+console.log(`Correo electrónico de ${user.name}: ${email}`);
+```
+
+En este caso, usamos el método `map` de `Maybe` para transformar el valor del correo electrónico a mayúsculas.
+Si el correo electrónico es `undefined`, el método `map` no se ejecutará y el valor por defecto será `No tiene correo electrónico`.
+
+En resumen, el tipo `Maybe` de functional-ts nos permite trabajar de forma segura con valores que pueden ser `null` o `undefined`.
+Nos permite encadenar operaciones de forma segura y manejar los casos en los que un valor puede no estar presente.

@@ -1,2 +1,2 @@
 export * from "./IO";
-export * from "./TaskIO";
+export * from "./Task";

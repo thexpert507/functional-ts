@@ -1,10 +1,10 @@
 import { test } from "vitest";
 import { onceMonad } from "../monads/utils";
-import { taskIO } from "../monads/io";
+import { Task } from "../monads/io";
 
 test("Execute once time monad", async ({ expect }) => {
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-  const task = taskIO(async () => {
+  const task = Task.from(async () => {
     await sleep(1000);
     return "Hello";
   });

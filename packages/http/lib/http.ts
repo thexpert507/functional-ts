@@ -1,11 +1,11 @@
 import { AppError, toAppError } from "@functional-ts/core";
-import { PrimitiveEither, ReaderT, TaskEither, TaskIO, readerT } from "@functional-ts/monads";
+import { PrimitiveEither, ReaderT, TaskEither, Task, readerT } from "@functional-ts/monads";
 
 const headers: HeadersInit = { "Content-Type": "application/json" };
 
 function responseToJson<A>(response: Response): TaskEither<AppError, A> {
   if (!response.ok) return TaskEither.left(toAppError(response.statusText));
-  return TaskIO.from(() => response.json()).toEither(toAppError);
+  return Task.from(() => response.json()).toEither(toAppError);
 }
 
 function responseToEither<A>(response: Response): TaskEither<AppError, A> {
@@ -19,7 +19,7 @@ export type HttpOptions = { isEither: boolean; interceptors?: HttpInterceptors }
 
 export function get<A>(url: string): ReaderT<HttpOptions, A> {
   return readerT((options) =>
-    TaskIO.from(() =>
+    Task.from(() =>
       fetch(url, { method: "GET", headers: options?.interceptors?.headers?.(headers) ?? headers })
     )
       .toEither(toAppError)
@@ -29,7 +29,7 @@ export function get<A>(url: string): ReaderT<HttpOptions, A> {
 
 export function post<A>(url: string, body?: any): ReaderT<HttpOptions, A> {
   return readerT((options) =>
-    TaskIO.from(() =>
+    Task.from(() =>
       fetch(url, {
         method: "POST",
         headers: options?.interceptors?.headers?.(headers) ?? headers,
@@ -43,7 +43,7 @@ export function post<A>(url: string, body?: any): ReaderT<HttpOptions, A> {
 
 export function put<A>(url: string, body?: any): ReaderT<HttpOptions, A> {
   return readerT((options) =>
-    TaskIO.from(() =>
+    Task.from(() =>
       fetch(url, {
         method: "PUT",
         headers: options?.interceptors?.headers?.(headers) ?? headers,
@@ -57,7 +57,7 @@ export function put<A>(url: string, body?: any): ReaderT<HttpOptions, A> {
 
 export function del<A>(url: string): ReaderT<HttpOptions, A> {
   return readerT((options) =>
-    TaskIO.from(() =>
+    Task.from(() =>
       fetch(url, {
         method: "DELETE",
         headers: options?.interceptors?.headers?.(headers) ?? headers,
@@ -70,7 +70,7 @@ export function del<A>(url: string): ReaderT<HttpOptions, A> {
 
 export function patch<A>(url: string, body?: any): ReaderT<HttpOptions, A> {
   return readerT((options) =>
-    TaskIO.from(() =>
+    Task.from(() =>
       fetch(url, {
         method: "PATCH",
         headers: options?.interceptors?.headers?.(headers) ?? headers,

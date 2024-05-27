@@ -14,7 +14,7 @@ export default defineConfig({
         do: resolve(__dirname, "lib/monads/do/index.ts"),
       },
       formats: ["es", "cjs"],
-      name: "@functional/monads",
+      name: "@functional-ts/monads",
       // the proper extensions will be added
       fileName: (format, chunk) => {
         // Si el formato es 'cjs', cambia la extensión a '.cjs'

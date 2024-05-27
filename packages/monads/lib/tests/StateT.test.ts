@@ -1,5 +1,5 @@
 import { test } from "vitest";
-import { PairT, StateT, TaskEither, TaskIO, maybe, pair, right, stateT } from "../monads";
+import { PairT, StateT, TaskEither, Task, maybe, pair, right, stateT } from "../monads";
 
 test("StateT.of", async ({ expect }) => {
   const state = StateT.of<number, string>("test");
@@ -81,7 +81,7 @@ test("Complex state transformations", async ({ expect }) => {
 
   const t3 = () => stateT((s: number) => TaskEither.right(pair(s.toString(), s)));
 
-  const t4 = () => stateT((s: number) => TaskIO.of(pair(s + 1, s)));
+  const t4 = () => stateT((s: number) => Task.of(pair(s + 1, s)));
 
   const t5 = () => t1().chain(t2).chain(t3).chain(t4);
 

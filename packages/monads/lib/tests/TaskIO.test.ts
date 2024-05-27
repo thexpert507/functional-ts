@@ -1,48 +1,48 @@
-// TaskIO.test.ts
+// Task.test.ts
 import { test } from "vitest";
-import { TaskIO } from "../monads";
+import { Task } from "../monads";
 import { TaskEither } from "../monads";
 
-test("TaskIO constructor and run", async ({ expect }) => {
-  const taskIOInstance = new TaskIO(() => Promise.resolve("test"));
-  expect(await taskIOInstance.run()).toBe("test");
+test("Task constructor and run", async ({ expect }) => {
+  const TaskInstance = new Task(() => Promise.resolve("test"));
+  expect(await TaskInstance.run()).toBe("test");
 });
 
-test("TaskIO map", async ({ expect }) => {
-  const taskIOInstance = new TaskIO(() => Promise.resolve("test"));
-  const mappedInstance = taskIOInstance.map((value) => Promise.resolve(value + " mapped"));
+test("Task map", async ({ expect }) => {
+  const TaskInstance = new Task(() => Promise.resolve("test"));
+  const mappedInstance = TaskInstance.map((value) => Promise.resolve(value + " mapped"));
   expect(await mappedInstance.run()).toBe("test mapped");
 });
 
-test("TaskIO chain", async ({ expect }) => {
-  const taskIOInstance = new TaskIO(() => Promise.resolve("test"));
-  const chainedInstance = taskIOInstance.chain((v) => TaskIO.of(v + " chained"));
+test("Task chain", async ({ expect }) => {
+  const TaskInstance = new Task(() => Promise.resolve("test"));
+  const chainedInstance = TaskInstance.bind((v) => Task.of(v + " chained"));
   expect(await chainedInstance.run()).toBe("test chained");
 });
 
-test("TaskIO chain either", async ({ expect }) => {
-  const taskIOInstance = new TaskIO(() => Promise.resolve("test"));
-  const chainedInstance = taskIOInstance.chain((v) => TaskEither.right(v + " chained"));
-  expect(await chainedInstance.run()).toBe("test chained");
+test("Task chain either", async ({ expect }) => {
+  const TaskInstance = new Task(() => Promise.resolve("test"));
+  const chainedInstance = TaskInstance.chain((v) => TaskEither.right(v + " chained"));
+  expect(await chainedInstance.getAsync()).toBe("test chained");
 });
 
-test("TaskIO of", async ({ expect }) => {
-  const taskIOInstance = TaskIO.of("test");
-  expect(await taskIOInstance.run()).toBe("test");
+test("Task of", async ({ expect }) => {
+  const TaskInstance = Task.of("test");
+  expect(await TaskInstance.run()).toBe("test");
 });
 
-test("TaskIO whith error", async ({ expect }) => {
-  const taskIOInstance = new TaskIO(() => Promise.reject("error"));
+test("Task whith error", async ({ expect }) => {
+  const TaskInstance = new Task(() => Promise.reject("error"));
   try {
-    await taskIOInstance.run();
+    await TaskInstance.run();
   } catch (error) {
     expect(error).toBe("error");
   }
 });
 
-test("TaskIO map with error", async ({ expect }) => {
-  const taskIOInstance = new TaskIO(() => Promise.resolve("test"));
-  const mappedInstance = taskIOInstance.map((value) => Promise.reject(value + " mapped"));
+test("Task map with error", async ({ expect }) => {
+  const TaskInstance = new Task(() => Promise.resolve("test"));
+  const mappedInstance = TaskInstance.map((value) => Promise.reject(value + " mapped"));
   try {
     await mappedInstance.run();
   } catch (error) {
@@ -50,14 +50,14 @@ test("TaskIO map with error", async ({ expect }) => {
   }
 });
 
-test("TaskIO toEither", async ({ expect }) => {
-  const taskIOInstance = new TaskIO<string>(() => Promise.reject("error"));
-  const eitherInstance = taskIOInstance.toEither();
+test("Task toEither", async ({ expect }) => {
+  const TaskInstance = new Task<string>(() => Promise.reject("error"));
+  const eitherInstance = TaskInstance.toEither();
   expect(await eitherInstance.getOrElse("default")).toBe("default");
 });
 
-test("TaskIO apply", async ({ expect }) => {
-  const taskIOInstance = new TaskIO(() => Promise.resolve((a: number) => a + 1));
-  const appliedInstance = TaskIO.apply(taskIOInstance, TaskIO.of(1));
+test("Task apply", async ({ expect }) => {
+  const TaskInstance = new Task(() => Promise.resolve((a: number) => a + 1));
+  const appliedInstance = Task.apply(TaskInstance, Task.of(1));
   expect(await appliedInstance.run()).toBe(2);
 });

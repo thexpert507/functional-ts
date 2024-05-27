@@ -8,35 +8,35 @@ type Effect<T> = () => Promise<T>;
 
 type F<A, B> = (a: NonNullable<A>) => B;
 
-export class TaskIO<T> implements Monad<T> {
-  static from<R>(effect: Effect<R>): TaskIO<R> {
-    return new TaskIO(effect);
+export class Task<T> implements Monad<T> {
+  static from<R>(effect: Effect<R>): Task<R> {
+    return new Task(effect);
   }
 
-  static void(effect: Effect<any>): TaskIO<void> {
-    return new TaskIO(async () => {
+  static void(effect: Effect<any>): Task<void> {
+    return new Task(async () => {
       await effect();
     });
   }
 
-  static of<R>(value: R): TaskIO<R> {
-    return new TaskIO(() => Promise.resolve(value));
+  static of<R>(value: R): Task<R> {
+    return new Task(() => Promise.resolve(value));
   }
 
-  static rejected<R>(error: any): TaskIO<R> {
-    return new TaskIO(() => Promise.reject(error));
+  static rejected<R>(error: any): Task<R> {
+    return new Task(() => Promise.reject(error));
   }
 
-  static apply<A, B>(f: TaskIO<F<A, B>>, mb: TaskIO<NonNullable<A>>): TaskIO<B> {
-    return new TaskIO(async () => {
+  static apply<A, B>(f: Task<F<A, B>>, mb: Task<NonNullable<A>>): Task<B> {
+    return new Task(async () => {
       const fn = await f.run();
       const value = await mb.run();
       return fn(value);
     });
   }
 
-  static all<T>(tasks: TaskIO<T>[]): TaskIO<T[]> {
-    return new TaskIO(async () => {
+  static all<T>(tasks: Task<T>[]): Task<T[]> {
+    return new Task(async () => {
       return Promise.all(tasks.map((task) => task.run()));
     });
   }
@@ -52,7 +52,7 @@ export class TaskIO<T> implements Monad<T> {
   }
 
   apply<B>(mb: Monad<MapFn<T, B>>): Monad<B> {
-    return new TaskIO(async () => {
+    return new Task(async () => {
       const [fn, value] = await Promise.all([mb.getAsync(), this.run()]);
       return fn(value);
     });
@@ -66,26 +66,26 @@ export class TaskIO<T> implements Monad<T> {
     return this.run().catch(f);
   }
 
-  map<R>(f: (wrapped: T) => R | Promise<R>): TaskIO<R> {
-    return new TaskIO(async () => f(await this.run()));
+  map<R>(f: (wrapped: T) => R | Promise<R>): Task<R> {
+    return new Task(async () => f(await this.run()));
   }
 
-  tap(f: (wrapped: T) => void): TaskIO<T> {
-    return new TaskIO(async () => {
+  tap(f: (wrapped: T) => void): Task<T> {
+    return new Task(async () => {
       const result = await this.run();
       f(result);
       return result;
     });
   }
 
-  bind<R>(f: (wrapped: T) => TaskIO<R>): TaskIO<R> {
-    return new TaskIO(async () => {
+  bind<R>(f: (wrapped: T) => Task<R>): Task<R> {
+    return new Task(async () => {
       return f(await this.run()).run();
     });
   }
 
   chain<R>(f: (wrapped: T) => Monad<R>): Monad<R> {
-    return new TaskIO(async () => {
+    return new Task(async () => {
       return this.fold(
         (e) => Promise.reject(e),
         (value) =>
@@ -115,5 +115,5 @@ export class TaskIO<T> implements Monad<T> {
   }
 }
 
-export const taskIO = TaskIO.from;
-export const applyTaskIO = TaskIO.apply;
+export const task = Task.from;
+export const applyTask = Task.apply;

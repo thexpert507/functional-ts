@@ -9,7 +9,7 @@ import {
   DoGen,
   Do,
   pureRecord,
-  TaskIO,
+  Task,
   reader,
 } from "../monads";
 import { Monad } from "../monads/types";
@@ -73,7 +73,7 @@ const handleWorld = reader((ctx: ErrorContext) =>
 
 const handleSum = handler<number, { a: number; b: number }>((program) => {
   return program.payload.toMonad().chain(({ a, b }) =>
-    TaskIO.from(async () => {
+    Task.from(async () => {
       const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
       await sleep(1000);
       return program.run(a + b);

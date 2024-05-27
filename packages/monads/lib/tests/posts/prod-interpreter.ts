@@ -1,10 +1,10 @@
-import { TaskIO, baseInterpreter, handler, interpreter, match } from "../../monads";
+import { Task, baseInterpreter, handler, interpreter, match } from "../../monads";
 import { Email, Post, User } from "./interfaces";
 
 const uri = "https://jsonplaceholder.typicode.com";
 
 const findAllPosts = handler<Post[]>((program) => {
-  return TaskIO.from(() => fetch(`${uri}/posts`).then<Post[]>((res) => res.json())).map((posts) =>
+  return Task.from(() => fetch(`${uri}/posts`).then<Post[]>((res) => res.json())).map((posts) =>
     program.run(posts)
   );
 });
@@ -12,9 +12,9 @@ const findAllPosts = handler<Post[]>((program) => {
 const findUserByPost = handler<User, Post>((program) => {
   return program.payload
     .map((post) =>
-      TaskIO.from(() => fetch(`${uri}/users/${post.userId}`).then<User>((res) => res.json()))
+      Task.from(() => fetch(`${uri}/users/${post.userId}`).then<User>((res) => res.json()))
     )
-    .getOrElse(TaskIO.rejected("Post not found"))
+    .getOrElse(Task.rejected("Post not found"))
     .map((data) => program.run(data));
 });
 

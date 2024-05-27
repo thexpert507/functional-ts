@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
+    "start:docs": "pnpm --filter docs run dev",
     "build": "pnpm -r run build",
     "publish:libs": "pnpm publish -r --filter @functional-ts/* --access=public"
   },

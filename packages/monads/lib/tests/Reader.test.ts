@@ -4,7 +4,7 @@ import {
   Either,
   Reader,
   TaskEither,
-  TaskIO,
+  Task,
   TaskReader,
   left,
   reader,
@@ -28,7 +28,9 @@ test("Reader map", ({ expect }) => {
 
 test("Reader chain", ({ expect }) => {
   const readerInstance = Reader.from<number, string>((r) => `test ${r}`);
-  const chainedInstance = readerInstance.chain((value) => Reader.from<number, string>(() => value + " chained"));
+  const chainedInstance = readerInstance.chain((value) =>
+    Reader.from<number, string>(() => value + " chained")
+  );
   expect(chainedInstance.run(1)).toBe("test 1 chained");
 });
 
@@ -80,13 +82,13 @@ test("Reader async operations", async ({ expect }) => {
   const add = (a: number, b: number): TaskReader<CTX, number> =>
     readerTask((ctx) => {
       ctx.logger.log(`Adding ${a} and ${b}`);
-      return TaskIO.of(a + b);
+      return Task.of(a + b);
     });
 
   const multiply = (a: number, b: number): TaskReader<CTX, number> =>
     readerTask((ctx) => {
       ctx.logger.log(`Multiplying ${a} and ${b}`);
-      return TaskIO.of(a * b);
+      return Task.of(a * b);
     });
 
   const addAndMultiply = (a: number, b: number, c: number): TaskReader<CTX, number> => {
@@ -162,7 +164,9 @@ test("Reader apply", ({ expect }) => {
 });
 
 test("Reader async apply", async ({ expect }) => {
-  const readerInstance = TaskReader.from<number, (a: number) => number>(async (r) => (a: number) => a + r);
+  const readerInstance = TaskReader.from<number, (a: number) => number>(
+    async (r) => (a: number) => a + r
+  );
   const numberInstance = TaskReader.from<number, number>(async (r) => r);
   const appliedInstance = TaskReader.apply(readerInstance, numberInstance);
   expect(await appliedInstance.run(1)).toBe(2);
@@ -170,7 +174,9 @@ test("Reader async apply", async ({ expect }) => {
 
 type F<A, B> = (a: A) => B;
 test("Reader async apply with either", async ({ expect }) => {
-  const reader1 = readerTaskEither<number, F<number, number>>((ctx) => TaskEither.right((a: number) => a + ctx));
+  const reader1 = readerTaskEither<number, F<number, number>>((ctx) =>
+    TaskEither.right((a: number) => a + ctx)
+  );
   const reader2 = readerTaskEither<number, number>((ctx) => TaskEither.right(ctx + 1));
   const result = await TaskReader.apply(reader1, reader2).toEither(1).getOrElse(0);
   expect(result).toBe(3);

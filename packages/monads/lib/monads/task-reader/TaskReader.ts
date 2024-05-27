@@ -1,7 +1,7 @@
 import { Either } from "../either/Either";
 import { Reader } from "../reader";
 import { TaskEither } from "../either/TaskEither";
-import { TaskIO } from "../io/TaskIO";
+import { Task } from "../io/Task";
 
 type F<A, B> = (a: NonNullable<A>) => B;
 
@@ -10,7 +10,7 @@ export class TaskReader<R, A> {
     return new TaskReader(f);
   }
 
-  static fromTaskIO<R, A>(fn: (a: R) => TaskIO<A>): TaskReader<R, A> {
+  static fromTask<R, A>(fn: (a: R) => Task<A>): TaskReader<R, A> {
     return new TaskReader((r: R) => fn(r).run());
   }
 
@@ -75,11 +75,11 @@ export class TaskReader<R, A> {
   }
 
   toEither<B>(r: R, left?: (r: R) => B): TaskEither<B, A> {
-    return TaskIO.from(async () => this.run(r)).toEither(left);
+    return Task.from(async () => this.run(r)).toEither(left);
   }
 }
 
-export const readerTask = TaskReader.fromTaskIO;
+export const readerTask = TaskReader.fromTask;
 export const readerTaskEither = TaskReader.fromTaskEither;
 export const applyTaskReader = TaskReader.apply;
 
