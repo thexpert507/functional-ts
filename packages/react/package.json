@@ -1,6 +1,6 @@
 {
   "name": "@functional-ts/react",
-  "private": true,
+  "private": false,
   "version": "0.0.1",
   "type": "module",
   "exports": {
