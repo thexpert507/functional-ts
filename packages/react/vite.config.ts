@@ -9,6 +9,7 @@ export default defineConfig({
     lib: {
       entry: { main: resolve(__dirname, "lib/index.ts") },
       formats: ["es", "cjs"],
+      name: "@functional-ts/react",
       fileName: (format, chunk) => {
         if (format === "cjs") return `${format}/${chunk}.cjs`;
         return `${format}/${chunk}.js`;
