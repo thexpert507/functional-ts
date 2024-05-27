@@ -16,7 +16,13 @@ export default defineConfig({
       },
     },
     rollupOptions: {
-      external: ["react", "react-dom"],
+      external: [
+        "react",
+        "react-dom",
+        "@functional-ts/monads",
+        "@functional-ts/core",
+        "@functional-ts/http",
+      ],
     },
   },
   plugins: [react(), dts()],
