@@ -15,6 +15,9 @@ export default defineConfig({
         return `${format}/${chunk}.js`;
       },
     },
+    rollupOptions: {
+      external: ["react", "react-dom"],
+    },
   },
   plugins: [react(), dts()],
 });
