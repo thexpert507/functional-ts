@@ -1,4 +1,4 @@
-import { test } from "vitest";
+import { test, vi } from "vitest";
 import { left, maybe, right, readerT, IO, PickContext } from "../monads";
 
 test("ReaderT", async ({ expect }) => {
@@ -44,4 +44,15 @@ test("ReaderT map context", async ({ expect }) => {
 
   expect(await reduced.run({ n: 3 }).getAsyncOrElse(() => "")).toBe("Hello = 6");
   expect(await reduced.run({ n: 0 }).getAsyncOrElse(() => "")).toBe("Hello = 0");
+});
+
+test("ReaderT tap", async ({ expect }) => {
+  const maybeReader = readerT((r: number) => maybe(r * 2));
+
+  const tapFn = vi.fn((a: number) => console.log(a));
+  const tapped = maybeReader.tap(tapFn);
+
+  expect(await tapped.run(2).getAsyncOrElse(() => 0)).toBe(4);
+  expect(await tapped.run(3).getAsyncOrElse(() => 0)).toBe(6);
+  expect(tapFn).toHaveBeenCalledTimes(2);
 });

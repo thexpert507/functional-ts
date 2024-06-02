@@ -32,6 +32,10 @@ export class ReaderT<R, A> {
     return ReaderT.ask<R>();
   }
 
+  tap(fn: (a: A) => void): ReaderT<R, A> {
+    return new ReaderT((r: R) => this.run(r).tap(fn));
+  }
+
   map<B>(f: (a: A) => B): ReaderT<R, B> {
     return new ReaderT((r: R) => this.run(r).map(f));
   }
