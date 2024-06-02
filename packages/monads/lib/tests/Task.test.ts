@@ -34,13 +34,21 @@ test("Task tap error", async ({ expect }) => {
   }
 });
 
-test("Task chain", async ({ expect }) => {
+test("Task bind", async ({ expect }) => {
   const TaskInstance = new Task(() => Promise.resolve("test"));
   const chainedInstance = TaskInstance.bind((v) => Task.of(v + " chained"));
   expect(await chainedInstance.run()).toBe("test chained");
 });
 
-test("Task chain either", async ({ expect }) => {
+test("Task bind error", async ({ expect }) => {
+  const bindFn = vi.fn((v) => Task.of(v + " chained"));
+  const TaskInstance = new Task(() => Promise.reject("error"));
+  const chainedInstance = TaskInstance.bindError(bindFn);
+  expect(await chainedInstance.run()).toBe("error chained");
+  expect(bindFn).toHaveBeenCalledWith("error");
+});
+
+test("Task chain", async ({ expect }) => {
   const TaskInstance = new Task(() => Promise.resolve("test"));
   const chainedInstance = TaskInstance.chain((v) => TaskEither.right(v + " chained"));
   expect(await chainedInstance.getAsync()).toBe("test chained");

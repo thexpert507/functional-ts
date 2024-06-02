@@ -90,6 +90,12 @@ export class Task<T> implements Monad<T> {
     });
   }
 
+  bindError<R>(f: (error: any) => Task<R>): Task<T | R> {
+    return new Task(async () => {
+      return this.run().catch((error) => f(error).run());
+    });
+  }
+
   chain<R>(f: (wrapped: T) => Monad<R>): Monad<R> {
     return new Task(async () => {
       return this.fold(

@@ -54,7 +54,7 @@ test("TaskEither.fold", async ({ expect }) => {
   expect(result).toBe("test");
 });
 
-test("TaskEither.chain resolve", async ({ expect }) => {
+test("TaskEither.bind resolve", async ({ expect }) => {
   const taskEitherInstance = TaskEither.from(() => Promise.resolve(right("test")));
   const chainedInstance = taskEitherInstance.bind((r) =>
     TaskEither.from(() => Promise.resolve(right(r + " chained")))
@@ -72,13 +72,22 @@ test("TaskEither.chain IO", async ({ expect }) => {
   expect(result).toBe("test chained");
 });
 
-test("TaskEither.chain reject", async ({ expect }) => {
+test("TaskEither.bind reject", async ({ expect }) => {
   const taskEitherInstance = TaskEither.from(() => Promise.reject("first error"));
   const chainedInstance = taskEitherInstance.bind((r) =>
     TaskEither.from(() => Promise.resolve(right(r + " chained")))
   );
   const result = await chainedInstance.getOrElse("error");
   expect(result).toBe("error");
+});
+
+test("TaskEither.bindLef", async ({ expect }) => {
+  const taskEitherInstance = TaskEither.from<string, string>(() => Promise.resolve(left("error")));
+  const chainedInstance = taskEitherInstance.bindLeft((l) =>
+    TaskEither.from(() => Promise.resolve(right(l + " chained")))
+  );
+  const result = await chainedInstance.getOrElse("error");
+  expect(result).toBe("error chained");
 });
 
 test("TaskEither.chainLeft resolve", async ({ expect }) => {
