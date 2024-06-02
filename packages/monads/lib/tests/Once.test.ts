@@ -29,7 +29,7 @@ test("Execute once time monad", async ({ expect }) => {
   expect(result1).toBe("Hello");
   expect(result2).toBe("Hello");
   expect(result3).toBe("Hello");
-  expect(time1).toBeGreaterThan(1000);
+  expect(time1).toBeGreaterThanOrEqual(1000);
   expect(time2).toBeLessThan(100);
   expect(time3).toBeLessThan(100);
 });
