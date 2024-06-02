@@ -56,6 +56,15 @@ export class IO<T> implements Monad<T> {
     return f(this.run());
   }
 
+  chainError<B>(f: (e: any) => Monad<B>): Monad<T | B> {
+    // TODO: fix this
+    try {
+      return this;
+    } catch (error) {
+      return f(error);
+    }
+  }
+
   fold<R>(f: () => R, g: (value: T) => R): R {
     try {
       return g(this.run());

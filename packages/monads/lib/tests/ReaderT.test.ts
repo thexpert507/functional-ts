@@ -56,3 +56,13 @@ test("ReaderT tap", async ({ expect }) => {
   expect(await tapped.run(3).getAsyncOrElse(() => 0)).toBe(6);
   expect(tapFn).toHaveBeenCalledTimes(2);
 });
+
+test("ReaderT chainError", async ({ expect }) => {
+  const eitherReader = readerT((r: number) => (r % 2 === 0 ? right(r) : left("odd")));
+  const maybeReader = readerT((r: number) => maybe(r * 2));
+
+  const chained = eitherReader.chainError(() => maybeReader);
+
+  expect(await chained.run(2).getAsyncOrElse(() => 0)).toBe(2);
+  expect(await chained.run(3).getAsyncOrElse(() => 0)).toBe(6);
+});

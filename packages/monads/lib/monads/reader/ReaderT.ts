@@ -44,13 +44,30 @@ export class ReaderT<R, A> {
     return new ReaderT((r: R) => this.run(r).chain((a) => f(a).run(r)));
   }
 
+  chainError<B>(f: (e: any) => ReaderT<R, B>): ReaderT<R, A | B> {
+    return new ReaderT((r: R) => this.run(r).chainError((e) => f(e).run(r)));
+  }
+
   chainMapContext<C2, B>(mapFn: (r: R) => C2, fn: (a: A) => ReaderT<C2, B>): ReaderT<R, B> {
     return this.chain((a) => ReaderT.from((r: R) => fn(a).run(mapFn(r))));
+  }
+
+  chainMapErrorContext<C2, B>(
+    mapFn: (r: R) => C2,
+    fn: (e: any) => ReaderT<C2, B>
+  ): ReaderT<R, A | B> {
+    return this.chainError((e) => ReaderT.from((r: R) => fn(e).run(mapFn(r))));
   }
 
   chainContext<C2, B>(fn: (a: A) => ReaderT<C2, B>): ReaderT<C2 & R, B> {
     return new ReaderT((r: C2 & R) => {
       return this.run(r).chain((a) => ReaderT.from(() => fn(a).run(r)).run(r));
+    });
+  }
+
+  chainErrorContext<C2, B>(fn: (e: any) => ReaderT<C2, B>): ReaderT<C2 & R, A | B> {
+    return new ReaderT((r: C2 & R) => {
+      return this.run(r).chainError((e) => ReaderT.from(() => fn(e).run(r)).run(r));
     });
   }
 

@@ -109,6 +109,19 @@ export class Task<T> implements Monad<T> {
     });
   }
 
+  chainError<B>(f: (e: any) => Monad<B>): Monad<T | B> {
+    return new Task<T | B>(async () => {
+      return this.fold(
+        async (e) =>
+          f(e).execute<Promise<T | B>>(
+            (e) => Promise.reject(e),
+            (value) => Promise.resolve(value)
+          ),
+        (value) => Promise.resolve(value) as unknown as Promise<T | B>
+      );
+    });
+  }
+
   toEither<L = never>(mapError?: (err: any) => L): TaskEither<L, T> {
     return TaskEither.from(() =>
       this.run()
@@ -122,8 +135,8 @@ export class Task<T> implements Monad<T> {
     );
   }
 
-  fold<R>(f: (e?: any) => R, g: (value: T) => R): Promise<R> {
-    return this.run().then(g).catch(f);
+  async fold<R>(f: (e?: any) => R, g: (value: T) => R): Promise<R> {
+    return await this.run().then(g).catch(f);
   }
 }
 

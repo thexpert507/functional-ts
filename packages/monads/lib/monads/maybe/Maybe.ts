@@ -48,6 +48,10 @@ export class Maybe<T> implements Monad<T> {
     return this.isNothing() ? Maybe.of(null as B) : f(this.value);
   }
 
+  chainError<B>(f: (e: any) => Monad<B>): Monad<T | B> {
+    return this.isNothing() ? f(null) : this;
+  }
+
   getAsync(): Promise<T> {
     return Promise.resolve(this.value);
   }

@@ -202,11 +202,18 @@ export class TaskEither<L, R> implements Monad<R> {
       this.effect().then(async (either) =>
         either.fold(
           (l) => Promise.resolve(new Left(l)),
-          (r) =>
-            f(r)
-              .getAsync()
-              .then((value) => right(value))
-              .catch(handleError)
+          (r) => f(r).getAsync().then(right).catch(handleError)
+        )
+      )
+    );
+  }
+
+  chainError<B>(f: (e: any) => Monad<B>): Monad<R | B> {
+    return new TaskEither(() =>
+      this.effect().then(async (either) =>
+        either.fold(
+          (l) => f(l).getAsync().then(right).catch(handleError),
+          (r) => Promise.resolve(right(r))
         )
       )
     );
@@ -216,11 +223,7 @@ export class TaskEither<L, R> implements Monad<R> {
     return new TaskEither(() =>
       this.effect().then(async (either) =>
         either.fold(
-          (l) =>
-            f(l)
-              .getAsync()
-              .then((value) => right(value))
-              .catch(handleError),
+          (l) => f(l).getAsync().then(right).catch(handleError),
           (r) => Promise.resolve(right(r))
         )
       )
