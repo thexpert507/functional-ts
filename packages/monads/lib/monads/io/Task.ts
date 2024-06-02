@@ -14,9 +14,7 @@ export class Task<T> implements Monad<T> {
   }
 
   static void(effect: Effect<any>): Task<void> {
-    return new Task(async () => {
-      await effect();
-    });
+    return new Task(async () => void (await effect()));
   }
 
   static of<R>(value: R): Task<R> {
@@ -29,8 +27,7 @@ export class Task<T> implements Monad<T> {
 
   static apply<A, B>(f: Task<F<A, B>>, mb: Task<NonNullable<A>>): Task<B> {
     return new Task(async () => {
-      const fn = await f.run();
-      const value = await mb.run();
+      const [fn, value] = await Promise.all([f.run(), mb.run()]);
       return fn(value);
     });
   }
@@ -75,6 +72,15 @@ export class Task<T> implements Monad<T> {
       const result = await this.run();
       f(result);
       return result;
+    });
+  }
+
+  tapError(f: (error: any) => void): Task<T> {
+    return new Task(async () => {
+      return this.run().catch((error) => {
+        f(error);
+        return Promise.reject(error);
+      });
     });
   }
 

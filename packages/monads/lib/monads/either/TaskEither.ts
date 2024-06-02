@@ -156,12 +156,20 @@ export class TaskEither<L, R> implements Monad<R> {
   tap(f: (r: R) => void): TaskEither<L, R> {
     return new TaskEither(() =>
       this.effect().then(async (either) =>
-        either.fold(
-          (l) => Promise.resolve(new Left(l) as Either<L, R>),
-          async (r) => {
-            f(r);
-            return right(r);
-          }
+        either.fold<Either<L, R>>(
+          (l) => left(l),
+          (r) => right(r).tapRight(f)
+        )
+      )
+    );
+  }
+
+  tapLeft(f: (l: L) => void): TaskEither<L, R> {
+    return new TaskEither(() =>
+      this.effect().then(async (either) =>
+        either.fold<Either<L, R>>(
+          (l) => left(l).tapLeft(f),
+          (r) => right(r)
         )
       )
     );

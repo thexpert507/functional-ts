@@ -1,5 +1,5 @@
 // Task.test.ts
-import { test } from "vitest";
+import { test, vi } from "vitest";
 import { Task } from "../monads";
 import { TaskEither } from "../monads";
 
@@ -12,6 +12,26 @@ test("Task map", async ({ expect }) => {
   const TaskInstance = new Task(() => Promise.resolve("test"));
   const mappedInstance = TaskInstance.map((value) => Promise.resolve(value + " mapped"));
   expect(await mappedInstance.run()).toBe("test mapped");
+});
+
+test("Task tap", async ({ expect }) => {
+  const TaskInstance = new Task(() => Promise.resolve("test"));
+  const tapFn = vi.fn();
+  const tappedInstance = TaskInstance.tap(tapFn);
+  expect(await tappedInstance.run()).toBe("test");
+  expect(tapFn).toHaveBeenCalledWith("test");
+});
+
+test("Task tap error", async ({ expect }) => {
+  const TaskInstance = new Task(() => Promise.reject("error"));
+  const tapFn = vi.fn();
+  const tappedInstance = TaskInstance.tapError(tapFn);
+  try {
+    await tappedInstance.run();
+  } catch (error) {
+    expect(error).toBe("error");
+    expect(tapFn).toHaveBeenCalledWith("error");
+  }
 });
 
 test("Task chain", async ({ expect }) => {

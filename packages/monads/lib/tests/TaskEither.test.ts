@@ -1,7 +1,7 @@
 // TaskEither.test.ts
-import { test } from "vitest";
+import { test, vi } from "vitest";
 import { Suite, Deferred } from "benchmark";
-import { TaskEither, applyTaskEither } from "../monads/either/TaskEither";
+import { TaskEither } from "../monads/either/TaskEither";
 import { Task, left, right } from "../monads";
 
 test("TaskEither.fromPrimitives", async ({ expect }) => {
@@ -115,13 +115,19 @@ test("TaskEither.map throw error", async ({ expect }) => {
 });
 
 test("TaskEither.tap", async ({ expect }) => {
-  let tappedValue = "";
+  const tapFn = vi.fn();
   const taskEitherInstance = TaskEither.from(() => Promise.resolve(right("test")));
-  const tappedInstance = taskEitherInstance.tap((r) => {
-    tappedValue = r;
-  });
+  const tappedInstance = taskEitherInstance.tap(tapFn);
   await tappedInstance.getOrElse("error");
-  expect(tappedValue).toBe("test");
+  expect(tapFn).toHaveBeenCalledWith("test");
+});
+
+test("TaskEither.tapLeft", async ({ expect }) => {
+  const tapFn = vi.fn();
+  const taskEitherInstance = TaskEither.from<string, string>(() => Promise.resolve(left("error")));
+  const tappedInstance = taskEitherInstance.tapLeft(tapFn);
+  await tappedInstance.getOrElse("error");
+  expect(tapFn).toHaveBeenCalledWith("error");
 });
 
 test("TaskEither.getOrElse", async ({ expect }) => {
