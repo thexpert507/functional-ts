@@ -10,9 +10,9 @@ function responseToJson<A>(response: Response): TaskEither<AppError, A> {
 
 function responseToEither<A>(response: Response): TaskEither<AppError, A> {
   return task<PrimitiveEither<any, A>>(() => response.json())
+    .bindError(() => Task.rejected<PrimitiveEither<any, A>>(response.statusText))
     .toEither(toAppError)
-    .bind(TaskEither.fromPrimitives)
-    .bindLeft(() => TaskEither.left(toAppError(response.statusText)));
+    .bind(TaskEither.fromPrimitives);
 }
 
 export type HttpInterceptors = {
