@@ -1,5 +1,5 @@
 import { AppError, toAppError } from "@functional-ts/core";
-import { PrimitiveEither, ReaderT, TaskEither, Task, readerT } from "@functional-ts/monads";
+import { PrimitiveEither, ReaderT, TaskEither, Task, readerT, task } from "@functional-ts/monads";
 
 const headers: HeadersInit = { "Content-Type": "application/json" };
 
@@ -9,7 +9,10 @@ function responseToJson<A>(response: Response): TaskEither<AppError, A> {
 }
 
 function responseToEither<A>(response: Response): TaskEither<AppError, A> {
-  return responseToJson<PrimitiveEither<any, A>>(response).bind(TaskEither.fromPrimitives);
+  return task<PrimitiveEither<any, A>>(() => response.json())
+    .toEither(toAppError)
+    .bind(TaskEither.fromPrimitives)
+    .bindLeft(() => TaskEither.left(toAppError(response.statusText)));
 }
 
 export type HttpInterceptors = {
