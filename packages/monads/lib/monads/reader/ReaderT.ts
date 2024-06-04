@@ -36,39 +36,37 @@ export class ReaderT<R, A> {
     return new ReaderT((r: R) => this.run(r).tap(fn));
   }
 
+  tapReader<B, R2 = R>(f: (a: A) => ReaderT<R2, B>): ReaderT<R & R2, A> {
+    return new ReaderT((r: R & R2) =>
+      this.run(r).chain((a) => right(a).tap(() => f(a).run(r).getAsync()))
+    );
+  }
+
+  tapContext(fn: (r: R) => void): ReaderT<R, A> {
+    return new ReaderT((r: R) => this.run(r).tap(() => fn(r)));
+  }
+
   map<B>(f: (a: A) => B): ReaderT<R, B> {
     return new ReaderT((r: R) => this.run(r).map(f));
   }
 
-  chain<B>(f: (a: A) => ReaderT<R, B>): ReaderT<R, B> {
-    return new ReaderT((r: R) => this.run(r).chain((a) => f(a).run(r)));
+  chain<B, R2 = R>(f: (a: A) => ReaderT<R2, B>): ReaderT<R2 & R, B> {
+    return new ReaderT((r: R2 & R) => this.run(r).chain((a) => f(a).run(r)));
   }
 
-  chainError<B>(f: (e: any) => ReaderT<R, B>): ReaderT<R, A | B> {
-    return new ReaderT((r: R) => this.run(r).chainError((e) => f(e).run(r)));
+  chainError<B, R2 = R>(fn: (e: any) => ReaderT<R2, B>): ReaderT<R2 & R, A | B> {
+    return new ReaderT((r: R2 & R) => this.run(r).chainError((e) => fn(e).run(r)));
   }
 
-  chainMapContext<C2, B>(mapFn: (r: R) => C2, fn: (a: A) => ReaderT<C2, B>): ReaderT<R, B> {
+  chainMapContext<R2, B>(mapFn: (r: R) => R2, fn: (a: A) => ReaderT<R2, B>): ReaderT<R, B> {
     return this.chain((a) => ReaderT.from((r: R) => fn(a).run(mapFn(r))));
   }
 
-  chainMapErrorContext<C2, B>(
-    mapFn: (r: R) => C2,
-    fn: (e: any) => ReaderT<C2, B>
+  chainMapErrorContext<R2, B>(
+    mapFn: (r: R) => R2,
+    fn: (e: any) => ReaderT<R2, B>
   ): ReaderT<R, A | B> {
     return this.chainError((e) => ReaderT.from((r: R) => fn(e).run(mapFn(r))));
-  }
-
-  chainContext<C2, B>(fn: (a: A) => ReaderT<C2, B>): ReaderT<C2 & R, B> {
-    return new ReaderT((r: C2 & R) => {
-      return this.run(r).chain((a) => ReaderT.from(() => fn(a).run(r)).run(r));
-    });
-  }
-
-  chainErrorContext<C2, B>(fn: (e: any) => ReaderT<C2, B>): ReaderT<C2 & R, A | B> {
-    return new ReaderT((r: C2 & R) => {
-      return this.run(r).chainError((e) => ReaderT.from(() => fn(e).run(r)).run(r));
-    });
   }
 
   mapContext<R2>(mapFn: (r: R2) => R): ReaderT<R2, A> {

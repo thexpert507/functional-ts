@@ -15,7 +15,7 @@ test("ReaderT chain context", async ({ expect }) => {
   const maybeReader = readerT((r: { n: number }) => maybe(r.n * 2));
   const eitherReader = readerT((r: { t: string }) => maybe(r));
 
-  const chained = maybeReader.chainContext((a) => eitherReader.map((b) => `${b.t} = ${a}`));
+  const chained = maybeReader.chain((a) => eitherReader.map((b) => `${b.t} = ${a}`));
 
   expect(await chained.run({ n: 3, t: "Number" }).getAsyncOrElse(() => "")).toBe("Number = 6");
   expect(await chained.run({ n: 0, t: "Number" }).getAsyncOrElse(() => "")).toBe("Number = 0");
@@ -33,11 +33,11 @@ test("ReaderT map context", async ({ expect }) => {
     readerT((r: { logSvc: LogService }) => r.logSvc.log(`LOG: ${n}`).map(() => n));
 
   const chained = multiplyByTwo
-    .chainContext(logResult)
-    .chainContext(logResult)
-    .chainContext(logResult)
-    .chainContext(logResult)
-    .chainContext(helloWorld);
+    .chain(logResult)
+    .chain(logResult)
+    .chain(logResult)
+    .chain(logResult)
+    .chain(helloWorld);
 
   type A = Pick<PickContext<typeof chained>, "n">;
   const reduced = chained.mapContext<A>((ctx) => ({ ...ctx, logSvc: logService, t: "Hello" }));
