@@ -164,6 +164,10 @@ export class TaskEither<L, R> implements Monad<R> {
     );
   }
 
+  tapError(f: (e: any) => void): Monad<R> {
+    return this.tapLeft(f);
+  }
+
   tapLeft(f: (l: L) => void): TaskEither<L, R> {
     return new TaskEither(() =>
       this.effect().then(async (either) =>

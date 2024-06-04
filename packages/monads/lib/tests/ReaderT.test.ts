@@ -1,5 +1,5 @@
 import { test, vi } from "vitest";
-import { left, maybe, right, readerT, IO, PickContext } from "../monads";
+import { left, maybe, right, readerT, IO, PickContext, nothing, Task, ReaderT } from "../monads";
 
 test("ReaderT", async ({ expect }) => {
   const maybeReader = readerT((r: number) => maybe(r * 2));
@@ -47,13 +47,50 @@ test("ReaderT map context", async ({ expect }) => {
 });
 
 test("ReaderT tap", async ({ expect }) => {
-  const maybeReader = readerT((r: number) => maybe(r * 2));
+  const sleep = (ms: number) => Task.void(() => new Promise((resolve) => setTimeout(resolve, ms)));
+  const maybeReader = readerT(({ n }: { n: number }) =>
+    n % 2 === 0 ? maybe(n * 2) : nothing<number>()
+  );
 
-  const tapFn = vi.fn((a: number) => console.log(a));
+  const tapFn = vi.fn((a: number) => {
+    return readerT(({ c }: { c: Console }) =>
+      Task.void(async () => c.log(`ReaderT tap reader ${a}`))
+    );
+  });
   const tapped = maybeReader.tap(tapFn);
 
-  expect(await tapped.run(2).getAsyncOrElse(() => 0)).toBe(4);
-  expect(await tapped.run(3).getAsyncOrElse(() => 0)).toBe(6);
+  const tapFnVoid = vi.fn(() => console.log("ReaderT tap void"));
+  const tapVoid = maybeReader.tap(tapFnVoid);
+
+  expect(await tapped.run({ n: 2, c: console }).getAsyncOrElse(() => 0)).toBe(4);
+  expect(await tapped.run({ n: 3, c: console }).getAsyncOrElse(() => 0)).toBe(0);
+  await sleep(1).getAsync();
+  expect(tapFn).toHaveBeenCalledTimes(1);
+
+  expect(await tapVoid.run({ n: 2 }).getAsyncOrElse(() => 0)).toBe(4);
+  expect(await tapVoid.run({ n: 3 }).getAsyncOrElse(() => 0)).toBe(0);
+  await sleep(1).getAsync();
+  expect(tapFnVoid).toHaveBeenCalledTimes(1);
+});
+
+test("ReaderT tapError", async ({ expect }) => {
+  const sleep = (ms: number) => Task.void(() => new Promise((resolve) => setTimeout(resolve, ms)));
+  const maybeReader = readerT(({ n }: { n: number }) =>
+    n % 2 === 0 ? maybe(n * 2) : nothing<number>()
+  );
+
+  const tapFn = vi.fn(() => {
+    return readerT(({ c }: { c: Console }) =>
+      Task.void(async () => c.log("ReaderT tap error reader"))
+    );
+  });
+
+  const tapped = maybeReader.tapError(tapFn);
+
+  expect(await tapped.run({ n: 2, c: console }).getAsyncOrElse(() => 0)).toBe(4);
+  expect(await tapped.run({ n: 3, c: console }).getAsyncOrElse(() => 0)).toBe(0);
+  expect(await tapped.run({ n: 5, c: console }).getAsyncOrElse(() => 0)).toBe(0);
+  await sleep(1).getAsync();
   expect(tapFn).toHaveBeenCalledTimes(2);
 });
 

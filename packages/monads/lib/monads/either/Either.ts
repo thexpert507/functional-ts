@@ -32,6 +32,8 @@ export abstract class Either<L, R> implements Monad<R> {
 
   abstract tap(f: (a: R) => void): Monad<R>;
 
+  abstract tapError(f: (e: any) => void): Monad<R>;
+
   abstract map<T>(f: (r: R) => T): Either<L, T>;
 
   abstract bind<T>(f: (r: R) => Either<L, T>): Either<L, T>;
@@ -90,6 +92,11 @@ export class Left<L> extends Either<L, never> {
   }
 
   tap(f: (a: never) => void): Monad<never> {
+    return this as unknown as Monad<never>;
+  }
+
+  tapError(f: (e: any) => void): Monad<never> {
+    f(this.value);
     return this as unknown as Monad<never>;
   }
 
@@ -171,6 +178,10 @@ export class Right<R> extends Either<never, R> {
   tap(f: (a: R) => void): Monad<R> {
     f(this.value);
     return this;
+  }
+
+  tapError(f: (e: any) => void): Monad<R> {
+    return this as unknown as Monad<R>;
   }
 
   tapLeft(f: (l: never) => void): Either<never, R> {

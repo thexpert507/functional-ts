@@ -7,6 +7,8 @@ export type Monad<A> = {
 
   tap(f: (a: A) => void): Monad<A>;
 
+  tapError(f: (e: any) => void): Monad<A>;
+
   chain<B>(f: (a: A) => Monad<B>): Monad<B>;
 
   chainError<B>(f: (e: any) => Monad<B>): Monad<A | B>;

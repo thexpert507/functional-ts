@@ -1,5 +1,6 @@
 import { MapFn } from "../free";
 import { Monad } from "../types/Monad";
+import { task } from "./Task";
 
 type F<A, B> = (a: NonNullable<A>) => B;
 
@@ -44,6 +45,10 @@ export class IO<T> implements Monad<T> {
     });
   }
 
+  tapError(f: (e: any) => void): Monad<T> {
+    return task(async () => this.run()).tapError(f);
+  }
+
   map<R>(f: (wrapped: T) => R): IO<R> {
     return new IO(() => f(this.run()));
   }
@@ -57,12 +62,7 @@ export class IO<T> implements Monad<T> {
   }
 
   chainError<B>(f: (e: any) => Monad<B>): Monad<T | B> {
-    // TODO: fix this
-    try {
-      return this;
-    } catch (error) {
-      return f(error);
-    }
+    return task(async () => this.run()).chainError(f);
   }
 
   fold<R>(f: () => R, g: (value: T) => R): R {

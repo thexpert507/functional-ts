@@ -32,18 +32,26 @@ export class ReaderT<R, A> {
     return ReaderT.ask<R>();
   }
 
-  tap(fn: (a: A) => void): ReaderT<R, A> {
-    return new ReaderT((r: R) => this.run(r).tap(fn));
-  }
-
-  tapReader<B, R2 = R>(f: (a: A) => ReaderT<R2, B>): ReaderT<R & R2, A> {
+  tap<B, R2 = R>(fn: (a: A) => ReaderT<R2, B> | void): ReaderT<R & R2, A> {
     return new ReaderT((r: R & R2) =>
-      this.run(r).chain((a) => right(a).tap(() => f(a).run(r).getAsync()))
+      this.run(r).tap((a) => {
+        const monad = fn(a);
+        return monad ? monad.run(r).getAsync() : undefined;
+      })
     );
   }
 
   tapContext(fn: (r: R) => void): ReaderT<R, A> {
     return new ReaderT((r: R) => this.run(r).tap(() => fn(r)));
+  }
+
+  tapError<B, R2 = R>(fn: (e: any) => ReaderT<R2, B> | void): ReaderT<R & R2, A> {
+    return new ReaderT((r: R & R2) =>
+      this.run(r).tapError((e) => {
+        const monad = fn(e);
+        return monad ? monad.run(r).getAsync() : undefined;
+      })
+    );
   }
 
   map<B>(f: (a: A) => B): ReaderT<R, B> {

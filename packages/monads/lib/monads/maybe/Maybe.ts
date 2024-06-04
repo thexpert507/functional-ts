@@ -24,6 +24,11 @@ export class Maybe<T> implements Monad<T> {
     return this;
   }
 
+  tapError(f: (e: any) => void): Monad<T> {
+    if (this.isNothing()) f(null);
+    return this;
+  }
+
   map<B>(f: (a: T) => B): Maybe<B> {
     return this.isNothing() ? Maybe.of(null as B) : Maybe.of<B>(f(this.value));
   }
