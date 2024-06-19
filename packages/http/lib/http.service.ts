@@ -1,25 +1,25 @@
-import { HttpOptions, get, post, put, patch, del } from "./http";
+import { HttpOptions, get, post, put, patch, del, MethodOptions, Endpoint } from "./http";
 
 export function createHttpService<E>(options: HttpOptions, mapErr?: (e: any) => E) {
   return {
-    get<A>(url: string) {
-      return get<A>(url).toEither(options, mapErr);
+    get<A>(url: Endpoint, methodOptions?: MethodOptions) {
+      return get<A>(url, methodOptions).toEither(options, mapErr);
     },
 
-    post<A>(url: string, body?: any) {
-      return post<A>(url, body).toEither(options, mapErr);
+    post<A>(url: Endpoint, body?: BodyInit, methodOptions?: MethodOptions) {
+      return post<A>(url, body, methodOptions).toEither(options, mapErr);
     },
 
-    put<A>(url: string, body?: any) {
-      return put<A>(url, body).toEither(options, mapErr);
+    put<A>(url: Endpoint, body?: BodyInit, methodOptions?: MethodOptions) {
+      return put<A>(url, body, methodOptions).toEither(options, mapErr);
     },
 
-    delete<A>(url: string) {
-      return del<A>(url).toEither(options, mapErr);
+    delete<A>(url: Endpoint, methodOptions?: MethodOptions) {
+      return del<A>(url, methodOptions).toEither(options, mapErr);
     },
 
-    patch<A>(url: string, body?: any) {
-      return patch<A>(url, body).toEither(options, mapErr);
+    patch<A>(url: Endpoint, body?: BodyInit, methodOptions?: MethodOptions) {
+      return patch<A>(url, body, methodOptions).toEither(options, mapErr);
     },
   };
 }
