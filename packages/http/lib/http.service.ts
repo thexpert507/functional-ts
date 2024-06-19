@@ -6,11 +6,11 @@ export function createHttpService<E>(options: HttpOptions, mapErr?: (e: any) => 
       return get<A>(url, methodOptions).toEither(options, mapErr);
     },
 
-    post<A>(url: Endpoint, body?: BodyInit, methodOptions?: MethodOptions) {
+    post<A>(url: Endpoint, body?: unknown, methodOptions?: MethodOptions) {
       return post<A>(url, body, methodOptions).toEither(options, mapErr);
     },
 
-    put<A>(url: Endpoint, body?: BodyInit, methodOptions?: MethodOptions) {
+    put<A>(url: Endpoint, body?: unknown, methodOptions?: MethodOptions) {
       return put<A>(url, body, methodOptions).toEither(options, mapErr);
     },
 
@@ -18,7 +18,7 @@ export function createHttpService<E>(options: HttpOptions, mapErr?: (e: any) => 
       return del<A>(url, methodOptions).toEither(options, mapErr);
     },
 
-    patch<A>(url: Endpoint, body?: BodyInit, methodOptions?: MethodOptions) {
+    patch<A>(url: Endpoint, body?: unknown, methodOptions?: MethodOptions) {
       return patch<A>(url, body, methodOptions).toEither(options, mapErr);
     },
   };

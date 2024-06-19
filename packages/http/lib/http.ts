@@ -62,7 +62,7 @@ export function get<A>(url: Endpoint, methodOptions?: MethodOptions): ReaderT<Ht
   });
 }
 
-function parseBody(body: BodyInit): BodyInit {
+function parseBody(body: unknown): BodyInit {
   if (typeof body === "string") return body;
   if (body instanceof FormData) return body;
   if (body instanceof ArrayBuffer) return body;
@@ -73,7 +73,7 @@ function parseBody(body: BodyInit): BodyInit {
 
 export function post<A>(
   url: Endpoint,
-  body?: BodyInit,
+  body?: unknown,
   methodOptions?: MethodOptions
 ): ReaderT<HttpOptions, A> {
   return readerT((options) => {
@@ -88,7 +88,7 @@ export function post<A>(
 
 export function put<A>(
   url: Endpoint,
-  body?: BodyInit,
+  body?: unknown,
   methodOptions?: MethodOptions
 ): ReaderT<HttpOptions, A> {
   return readerT((options) => {
@@ -114,7 +114,7 @@ export function del<A>(url: Endpoint, methodOptions?: MethodOptions): ReaderT<Ht
 
 export function patch<A>(
   url: Endpoint,
-  body?: BodyInit,
+  body?: unknown,
   methodOptions?: MethodOptions
 ): ReaderT<HttpOptions, A> {
   return readerT((options) => {
