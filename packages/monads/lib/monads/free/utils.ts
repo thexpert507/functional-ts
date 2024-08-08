@@ -37,3 +37,12 @@ export function DoGen<A, R>(
   };
   return iterate();
 }
+
+export function sequece<A>(...programs: Free<Program<A>>[]): Free<Program<A[]>> {
+  const [first, ...rest] = programs;
+  if (!first) return free(Pure([]));
+  return rest.reduce<Free<Program<A[]>>>(
+    (acc, program) => acc.chain((results) => program.map((result) => [...results, result])),
+    first.map((result) => [result])
+  );
+}

@@ -11,8 +11,8 @@ import {
   pureRecord,
   Task,
   reader,
+  sequece,
 } from "../monads";
-import { Monad } from "../monads/types";
 
 test("[Free] Send email to all posts action", { timeout: 10 * 1000 }, async ({ expect }) => {
   const result = SendEmailFromAllPosts.run(devInterpreter.make());
@@ -72,7 +72,7 @@ const handleWorld = reader((ctx: ErrorContext) =>
 );
 
 const handleSum = handler<number, { a: number; b: number }>((program) => {
-  return program.payload.toMonad().chain(({ a, b }) =>
+  return program.payload.chain(({ a, b }) =>
     Task.from(async () => {
       const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
       await sleep(1000);
@@ -131,4 +131,16 @@ test.skip("[Free] Do notation", async ({ expect }) => {
   console.log(value);
 
   expect(value).toEqual(46);
+});
+
+test("[Free] Sequence", async ({ expect }) => {
+  const programs = sequece(...[hello("world"), world("world"), hello("world"), world("world")]);
+
+  const result = await programs
+    .run(programinterpreter.withContext({ ...logCtx, ...errorCtx }).make())
+    .getAsyncOrElse(() => []);
+
+  console.log("Sequence", result);
+
+  expect(result).toEqual(["Hello world", "World world", "Hello world", "World world"]);
 });
