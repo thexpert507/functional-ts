@@ -153,7 +153,7 @@ export class TaskEither<L, R> implements Monad<R> {
     );
   }
 
-  tap(f: (r: R) => void): TaskEither<L, R> {
+  tap(f: (r: R) => Monad<void> | void): TaskEither<L, R> {
     return new TaskEither(() =>
       this.effect().then(async (either) =>
         either.fold<Either<L, R>>(
@@ -164,7 +164,7 @@ export class TaskEither<L, R> implements Monad<R> {
     );
   }
 
-  tapError(f: (e: any) => void): Monad<R> {
+  tapError(f: (e: any) => Monad<void> | void): Monad<R> {
     return this.tapLeft(f);
   }
 
@@ -260,6 +260,10 @@ export class TaskEither<L, R> implements Monad<R> {
 
   async toPrimitive(): Promise<PrimitiveEither<L, R>> {
     return this.effect().then((either) => either.toPrimitive());
+  }
+
+  transform<B>(transformer: (monad: Monad<R>) => B): B {
+    return transformer(this);
   }
 }
 

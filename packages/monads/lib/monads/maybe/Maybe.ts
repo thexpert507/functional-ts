@@ -3,8 +3,8 @@ import { MapFn } from "../free";
 import { Monad } from "../types/Monad";
 
 export class Maybe<T> implements Monad<T> {
-  static of<T>(value: T): Maybe<T> {
-    return new Maybe(value);
+  static of<T>(value: T | undefined | null): Maybe<T> {
+    return new Maybe(value as T);
   }
 
   static apply<A, B>(f: Maybe<MapFn<A, B>>, a: Maybe<A>): Maybe<B> {
@@ -19,13 +19,27 @@ export class Maybe<T> implements Monad<T> {
     return this.value === null || this.value === undefined;
   }
 
-  tap(f: (a: T) => void): Maybe<T> {
-    if (!this.isNothing()) f(this.value);
+  isJust(): boolean {
+    return !this.isNothing();
+  }
+
+  tap(f: (a: T) => Monad<void> | void): Maybe<T> {
+    if (this.isNothing()) return this;
+    const monad = f(this.value);
+    if (monad && "getAsync" in monad) monad.getAsync();
     return this;
   }
 
-  tapError(f: (e: any) => void): Monad<T> {
-    if (this.isNothing()) f(null);
+  tapNullable(f: (a: T | null) => Monad<void> | void): Maybe<T> {
+    const monad = f(this.value);
+    if (monad && "getAsync" in monad) monad.getAsync();
+    return this;
+  }
+
+  tapError(f: (e: any) => Monad<void> | void): Monad<T> {
+    if (this.isJust()) return this;
+    const monad = f(null);
+    if (monad && "getAsync" in monad) monad.getAsync();
     return this;
   }
 
@@ -92,8 +106,8 @@ export class Maybe<T> implements Monad<T> {
     return this.isNothing() ? onLeft() : onRight(this.value as NonNullable<T>);
   }
 
-  toMonad(): Monad<T> {
-    return this;
+  transform<B>(transformer: (monad: Monad<T>) => B): B {
+    return transformer(this);
   }
 }
 

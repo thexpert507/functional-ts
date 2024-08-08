@@ -5,9 +5,9 @@ export type Monad<A> = {
 
   map<B>(f: (a: A) => B): Monad<B>;
 
-  tap(f: (a: A) => void): Monad<A>;
+  tap(f: (a: A) => Monad<void> | void): Monad<A>;
 
-  tapError(f: (e: any) => void): Monad<A>;
+  tapError(f: (e: any) => Monad<void> | void): Monad<A>;
 
   chain<B>(f: (a: A) => Monad<B>): Monad<B>;
 
@@ -18,4 +18,6 @@ export type Monad<A> = {
   getAsync(): Promise<A>;
 
   getAsyncOrElse(f: (e?: any) => A): Promise<A>;
+
+  transform<B>(transformer: (monad: Monad<A>) => B): B;
 };

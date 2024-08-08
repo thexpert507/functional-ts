@@ -37,15 +37,16 @@ export class IO<T> implements Monad<T> {
     return Promise.resolve(this.fold(f, g));
   }
 
-  tap(f: (wrapped: T) => void): IO<T> {
+  tap(f: (wrapped: T) => Monad<void> | void): IO<T> {
     return new IO(() => {
       const value = this.run();
-      f(value);
+      const monad = f(value);
+      if (monad) monad.getAsync();
       return value;
     });
   }
 
-  tapError(f: (e: any) => void): Monad<T> {
+  tapError(f: (e: any) => Monad<void> | void): Monad<T> {
     return task(async () => this.run()).tapError(f);
   }
 
@@ -83,6 +84,10 @@ export class IO<T> implements Monad<T> {
 
   apply<B>(mb: Monad<MapFn<T, B>>): Monad<B> {
     return mb.map((f) => f(this.run()));
+  }
+
+  transform<B>(transformer: (monad: Monad<T>) => B): B {
+    return transformer(this);
   }
 }
 

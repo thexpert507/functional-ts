@@ -67,18 +67,20 @@ export class Task<T> implements Monad<T> {
     return new Task(async () => f(await this.run()));
   }
 
-  tap(f: (wrapped: T) => void): Task<T> {
+  tap(f: (wrapped: T) => Monad<void> | void): Task<T> {
     return new Task(async () => {
       const result = await this.run();
-      f(result);
+      const monad = f(result);
+      if (monad) monad.getAsync();
       return result;
     });
   }
 
-  tapError(f: (error: any) => void): Task<T> {
+  tapError(f: (error: any) => Monad<void> | void): Task<T> {
     return new Task(async () => {
       return this.run().catch((error) => {
-        f(error);
+        const monad = f(error);
+        if (monad) monad.getAsync();
         return Promise.reject(error);
       });
     });
@@ -137,6 +139,10 @@ export class Task<T> implements Monad<T> {
 
   async fold<R>(f: (e?: any) => R, g: (value: T) => R): Promise<R> {
     return await this.run().then(g).catch(f);
+  }
+
+  transform<B>(transformer: (monad: Monad<T>) => B): B {
+    return transformer(this);
   }
 }
 

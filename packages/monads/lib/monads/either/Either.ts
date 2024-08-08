@@ -30,9 +30,9 @@ export abstract class Either<L, R> implements Monad<R> {
   abstract tapLeft(f: (l: L) => void): Either<L, R>;
   abstract tapRight(f: (r: R) => void): Either<L, R>;
 
-  abstract tap(f: (a: R) => void): Monad<R>;
+  abstract tap(f: (a: R) => Monad<void> | void): Monad<R>;
 
-  abstract tapError(f: (e: any) => void): Monad<R>;
+  abstract tapError(f: (e: any) => Monad<void> | void): Monad<R>;
 
   abstract map<T>(f: (r: R) => T): Either<L, T>;
 
@@ -53,6 +53,8 @@ export abstract class Either<L, R> implements Monad<R> {
   abstract getOrElseThrow(): R;
 
   abstract getOrElse(defaultValue: R): R;
+
+  abstract transform<B>(transformer: (monad: Monad<R>) => B): B;
 }
 export class Left<L> extends Either<L, never> {
   fold<T>(left: (l: L) => T, right: (r: never) => T): T {
@@ -95,8 +97,9 @@ export class Left<L> extends Either<L, never> {
     return this as unknown as Monad<never>;
   }
 
-  tapError(f: (e: any) => void): Monad<never> {
-    f(this.value);
+  tapError(f: (e: any) => Monad<void> | void): Monad<never> {
+    const monad = f(this.value);
+    if (monad) monad.getAsync();
     return this as unknown as Monad<never>;
   }
 
@@ -135,6 +138,10 @@ export class Left<L> extends Either<L, never> {
 
   getOrElse(defaultValue: never): never {
     return defaultValue;
+  }
+
+  transform<B>(transformer: (monad: Monad<never>) => B): B {
+    return transformer(this);
   }
 }
 
@@ -175,12 +182,13 @@ export class Right<R> extends Either<never, R> {
     return true;
   }
 
-  tap(f: (a: R) => void): Monad<R> {
-    f(this.value);
+  tap(f: (a: R) => Monad<void> | void): Monad<R> {
+    const monad = f(this.value);
+    if (monad) monad.getAsync();
     return this;
   }
 
-  tapError(f: (e: any) => void): Monad<R> {
+  tapError(f: (e: any) => Monad<void> | void): Monad<R> {
     return this as unknown as Monad<R>;
   }
 
@@ -219,6 +227,10 @@ export class Right<R> extends Either<never, R> {
 
   getOrElse(defaultValue: R): R {
     return this.value;
+  }
+
+  transform<B>(transformer: (monad: Monad<R>) => B): B {
+    return transformer(this);
   }
 }
 

@@ -1,5 +1,5 @@
-import { task } from "../io";
-import { Monad } from "../types";
+import { task } from "../../io";
+import { Monad } from "../../types";
 
 export function onceMonad<A>(m: Monad<A>): Monad<A> {
   let cache: A;
