@@ -36,7 +36,7 @@ export class ReaderT<R, A> {
     return new ReaderT((r: R & R2) =>
       this.run(r).tap((a) => {
         const monad = fn(a);
-        return monad ? monad.run(r).getAsync() : undefined;
+        return monad ? monad.run(r).map(() => void 0) : void 0;
       })
     );
   }
@@ -49,7 +49,7 @@ export class ReaderT<R, A> {
     return new ReaderT((r: R & R2) =>
       this.run(r).tapError((e) => {
         const monad = fn(e);
-        return monad ? monad.run(r).getAsync() : undefined;
+        return monad ? monad.run(r).map(() => void 0) : void 0;
       })
     );
   }
