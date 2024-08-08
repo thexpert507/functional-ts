@@ -3,23 +3,20 @@
 import { resolve } from "node:path";
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
-import commonjsPlugin from "@chialab/esbuild-plugin-commonjs";
 
 export default defineConfig({
   build: {
     lib: {
-      entry: {
-        main: resolve(__dirname, "lib/index.ts"),
-        do: resolve(__dirname, "lib/monads/do/index.ts"),
-      },
+      // Could also be a dictionary or array of multiple entry points
+      entry: { main: resolve(__dirname, "lib/index.ts") },
       formats: ["es", "cjs"],
-      name: "@functional-ts/monads",
+      name: "@functional-ts/ioc",
       fileName: (format, chunk) => {
         if (format === "cjs") return `${format}/${chunk}.cjs`;
         return `${format}/${chunk}.js`;
       },
     },
   },
-  plugins: [dts(), commonjsPlugin()],
+  plugins: [dts()],
   test: { watch: false },
 });

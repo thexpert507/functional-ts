@@ -1,27 +1,19 @@
 {
-  "name": "@functional-ts/monads",
+  "name": "@functional-ts/ioc",
   "private": false,
-  "version": "1.1.18",
+  "version": "0.0.1",
   "type": "module",
   "exports": {
     ".": {
       "require": "./dist/cjs/main.cjs",
       "import": "./dist/es/main.js",
       "types": "./dist/index.d.ts"
-    },
-    "./do": {
-      "require": "./dist/cjs/do.cjs",
-      "import": "./dist/es/do.js",
-      "types": "./dist/monads/do/index.d.ts"
     }
   },
   "typesVersions": {
     ">=0.0.0": {
       "*": [
         "./dist/index.d.ts"
-      ],
-      "do": [
-        "./dist/monads/do/index.d.ts"
       ]
     }
   },
@@ -33,19 +25,17 @@
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
     "coverage": "vitest run --coverage",
-    "benchmark": "tsc ./lib/tests/AsyncEither.benchmark.ts && node ./lib/tests/AsyncEither.benchmark.js",
     "prepublish": "pnpm test && pnpm build"
   },
   "devDependencies": {
-    "@chialab/esbuild-plugin-commonjs": "^0.18.0",
-    "@types/benchmark": "^2.1.5",
-    "@types/node": "18.15.11",
-    "@vitest/ui": "^1.4.0",
-    "benchmark": "^2.1.4",
-    "ts-node": "^10.0.0",
     "typescript": "^5.2.2",
     "vite": "^5.3.4",
     "vite-plugin-dts": "^3.7.3",
     "vitest": "^2.0.4"
+  },
+  "dependencies": {
+    "awilix": "^10.0.2",
+    "@functional-ts/monads": "workspace:^",
+    "@functional-ts/core": "workspace:^"
   }
 }
