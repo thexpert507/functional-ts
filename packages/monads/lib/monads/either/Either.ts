@@ -27,8 +27,8 @@ export abstract class Either<L, R> implements Monad<R> {
   abstract isLeft(): boolean;
   abstract isRight(): boolean;
 
-  abstract tapLeft(f: (l: L) => void): Either<L, R>;
-  abstract tapRight(f: (r: R) => void): Either<L, R>;
+  abstract tapLeft(f: (l: L) => Monad<void> | void): Either<L, R>;
+  abstract tapRight(f: (r: R) => Monad<void> | void): Either<L, R>;
 
   abstract tap(f: (a: R) => Monad<void> | void): Monad<R>;
 
@@ -93,7 +93,7 @@ export class Left<L> extends Either<L, never> {
     return false;
   }
 
-  tap(f: (a: never) => void): Monad<never> {
+  tap(f: (a: never) => Monad<void> | void): Monad<never> {
     return this as unknown as Monad<never>;
   }
 
@@ -103,12 +103,13 @@ export class Left<L> extends Either<L, never> {
     return this as unknown as Monad<never>;
   }
 
-  tapLeft(f: (l: L) => void): Either<L, never> {
-    f(this.value);
+  tapLeft(f: (l: L) => Monad<void> | void): Either<L, never> {
+    const monad = f(this.value);
+    if (monad) monad.getAsync();
     return this;
   }
 
-  tapRight(f: (r: never) => void): Either<L, never> {
+  tapRight(f: (r: never) => Monad<void> | void): Either<L, never> {
     return this as unknown as Either<L, never>;
   }
 
@@ -196,8 +197,9 @@ export class Right<R> extends Either<never, R> {
     return this as unknown as Either<never, R>;
   }
 
-  tapRight(f: (r: R) => void): Either<never, R> {
-    f(this.value);
+  tapRight(f: (r: R) => Monad<void> | void): Either<never, R> {
+    const monad = f(this.value);
+    if (monad) monad.getAsync();
     return this;
   }
 
