@@ -23,8 +23,7 @@ export function createModule(props: ModuleProps): Module {
 
   imports.forEach((module) => {
     Object.entries(module.container.cradle).forEach(([key, value]) => {
-      if (!container.hasRegistration(key)) container.register(key, asValue(value));
-      throw new Error(`Duplicated key ${key}`);
+      container.register(key, asValue(value));
     });
   });
 
