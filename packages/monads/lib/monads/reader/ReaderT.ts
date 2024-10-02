@@ -81,6 +81,10 @@ export class ReaderT<R, A> {
     return new ReaderT((r: R2) => this.run(mapFn(r)));
   }
 
+  provide<R2 extends Partial<R>>(partial: R2): ReaderT<Omit<R, keyof R2>, A> {
+    return new ReaderT((r: Omit<R, keyof R2>) => this.run({ ...r, ...partial } as R));
+  }
+
   toEither<E = unknown>(r: R, defaultLeft?: (e: any) => E): TaskEither<E, A> {
     return TaskEither.from(() =>
       this.run(r).execute<Either<any, A>>((e) => left(defaultLeft ? defaultLeft(e) : e), right)

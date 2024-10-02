@@ -103,3 +103,12 @@ test("ReaderT chainError", async ({ expect }) => {
   expect(await chained.run(2).getAsyncOrElse(() => 0)).toBe(2);
   expect(await chained.run(3).getAsyncOrElse(() => 0)).toBe(6);
 });
+
+test("ReaderT provide", async ({ expect }) => {
+  type A = { a: number; b: string };
+  const reader = readerT(({ a, b }: A) => right(a + b.length));
+
+  const provided = reader.provide({ a: 2 });
+
+  expect(await provided.run({ b: "hello" }).getAsyncOrElse(() => 0)).toBe(7);
+});
