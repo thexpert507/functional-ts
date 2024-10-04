@@ -90,6 +90,10 @@ export class ReaderT<R, A> {
       this.run(r).execute<Either<any, A>>((e) => left(defaultLeft ? defaultLeft(e) : e), right)
     );
   }
+
+  transform<B>(transformer: (readerT: ReaderT<R, A>) => B): B {
+    return transformer(this);
+  }
 }
 
 export const readerT = ReaderT.from;
