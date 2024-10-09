@@ -112,3 +112,16 @@ test("ReaderT provide", async ({ expect }) => {
 
   expect(await provided.run({ b: "hello" }).getAsyncOrElse(() => 0)).toBe(7);
 });
+
+test("ReaderT apply", async ({ expect }) => {
+  type CA = { a: number };
+  type CB = { b: string };
+
+  const value = readerT(({ a }: CA) => right(a * 2));
+
+  const fn = readerT(({ b }: CB) => right((a: number) => a + b.length));
+
+  const applied = value.apply(fn);
+
+  expect(await applied.run({ a: 2, b: "hello" }).getAsyncOrElse(() => 0)).toBe(9);
+});

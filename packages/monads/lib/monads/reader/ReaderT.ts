@@ -18,18 +18,18 @@ export class ReaderT<R, A> {
     return new ReaderT((r: R) => right(r));
   }
 
-  static apply<C, A, B>(f: ReaderT<C, MapFn<A, B>>, mb: ReaderT<C, A>): ReaderT<C, B> {
-    return new ReaderT((r: C) => {
-      const fn = f.run(r);
-      const value = mb.run(r);
-      return value.apply(fn);
-    });
+  static apply<CA, CB, A, B>(f: ReaderT<CA, MapFn<A, B>>, mb: ReaderT<CB, A>): ReaderT<CA & CB, B> {
+    return new ReaderT((r: CA & CB) => mb.run(r).apply(f.run(r)));
   }
 
   protected constructor(public run: (r: R) => Monad<A>) {}
 
   ask(): ReaderT<R, R> {
     return ReaderT.ask<R>();
+  }
+
+  apply<R2, B>(mb: ReaderT<R2, MapFn<A, B>>): ReaderT<R & R2, B> {
+    return ReaderT.apply(mb, this);
   }
 
   tap<B, R2 = R>(fn: (a: A) => ReaderT<R2, B> | void): ReaderT<R & R2, A> {
