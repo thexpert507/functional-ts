@@ -50,6 +50,10 @@ export class Reader<R, A, E = unknown> {
     return new Reader((r: R) => f(this.run(r)).run(r));
   }
 
+  provide<R2 extends Partial<R>>(partial: R2): Reader<Omit<R, keyof R2>, A> {
+    return new Reader((r: Omit<R, keyof R2>) => this.run({ ...r, ...partial } as R));
+  }
+
   chainContext<C2, B>(mapFn: (r: R) => C2, fn: (a: A) => Reader<C2, B>): Reader<R, B> {
     return this.chain((a) => readerMapContext(mapFn, fn(a)));
   }
