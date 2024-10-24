@@ -111,6 +111,18 @@ export class Task<T> implements Monad<T> {
     });
   }
 
+  tchain(f: (a: T) => Monad<void>): Monad<T> {
+    return new Task(async () => {
+      return this.fold(
+        async (e) => Promise.reject(e),
+        async (value) => {
+          await f(value).getAsync();
+          return value;
+        }
+      );
+    });
+  }
+
   chainError<B>(f: (e: any) => Monad<B>): Monad<T | B> {
     return new Task<T | B>(async () => {
       return this.fold(

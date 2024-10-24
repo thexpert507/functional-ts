@@ -1,22 +1,21 @@
-import { task } from "../../io";
+import { left } from "../../either";
+import { Task } from "../../io";
 import { Monad } from "../../types";
 
-type RetryOptions = {
-  retries: number;
-  delay?: number;
-};
+const timeout = (ms: number) => Task.void(() => new Promise((resolve) => setTimeout(resolve, ms)));
+
+type OnRetryFn = (error: any) => void | Monad<void>;
+
+type Config = { max: number; delay?: number; onRetry?: OnRetryFn };
 
 export const retry =
-  (options: RetryOptions) =>
+  (config: Config, retries = 0) =>
   <T>(monad: Monad<T>): Monad<T> => {
-    return task(() => {
-      const chained = Array.from({ length: options.retries - 1 })
-        .fill(0)
-        .reduce((prev) => {
-          const currentMonad = prev as Monad<T>;
-          return currentMonad.chainError(() => monad);
-        }, monad) as Monad<T>;
-
-      return chained.getAsync();
+    return monad.chainError((error) => {
+      const transformer = retry(config, retries + 1);
+      if (retries >= config.max) return left(error);
+      return timeout(config.delay ?? 0)
+        .tap(() => config.onRetry?.(error))
+        .chain(() => transformer(monad));
     });
   };

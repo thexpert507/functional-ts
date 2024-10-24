@@ -11,6 +11,8 @@ export type Monad<A> = {
 
   chain<B>(f: (a: A) => Monad<B>): Monad<B>;
 
+  tchain(f: (a: A) => Monad<void>): Monad<A>;
+
   chainError<B>(f: (e: any) => Monad<B>): Monad<A | B>;
 
   execute<R>(f: (e?: any) => R, g: (value: A) => R): Promise<R>;

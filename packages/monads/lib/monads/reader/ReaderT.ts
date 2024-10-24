@@ -1,7 +1,9 @@
 import { Either, right, left } from "../either/Either";
 import { TaskEither } from "../either/TaskEither";
 import { MapFn } from "../free";
+import { Task } from "../io";
 import { Monad } from "../types";
+import { listMap, splitArray, toEither, toTask } from "../utils";
 
 export type PickContext<R> = R extends ReaderT<infer C, any> ? C : never;
 
@@ -22,10 +24,43 @@ export class ReaderT<R, A> {
     return new ReaderT((r: CA & CB) => mb.run(r).apply(f.run(r)));
   }
 
+  static all<R, A>(readers: ReaderT<R, A>[]): ReaderT<R, A[]> {
+    return ReaderT.ask<R>()
+      .map((ctx) => readers.map((r) => r.run(ctx)))
+      .map(listMap((m) => m.transform(toTask)))
+      .map(Task.all)
+      .chain(ReaderT.of);
+  }
+
+  static sequence<R, A>(readers: ReaderT<R, A>[]): ReaderT<R, A[]> {
+    return ReaderT.ask<R>()
+      .map((ctx) => readers.map((r) => r.run(ctx)))
+      .map(listMap((m) => m.transform(toEither)))
+      .map(TaskEither.sequence)
+      .chain(ReaderT.of);
+  }
+
+  static concurrent(concurrency: number) {
+    return <R, A>(readers: ReaderT<R, A>[]): ReaderT<R, A[]> => {
+      return ReaderT.ask<R>()
+        .map((ctx) => readers.map((r) => r.run(ctx)))
+        .map(listMap((m) => m.transform(toEither)))
+        .map(splitArray(concurrency))
+        .map((chunks) => chunks.map(TaskEither.all))
+        .map(TaskEither.sequence)
+        .chain(ReaderT.of)
+        .map((r) => r.flat());
+    };
+  }
+
   protected constructor(public run: (r: R) => Monad<A>) {}
 
   ask(): ReaderT<R, R> {
     return ReaderT.ask<R>();
+  }
+
+  off<B>(fn: (a: A) => Monad<B>): ReaderT<R, B> {
+    return new ReaderT((r: R) => this.run(r).chain(fn));
   }
 
   apply<R2, B>(mb: ReaderT<R2, MapFn<A, B>>): ReaderT<R & R2, B> {
@@ -60,6 +95,10 @@ export class ReaderT<R, A> {
 
   chain<B, R2 = R>(f: (a: A) => ReaderT<R2, B>): ReaderT<R2 & R, B> {
     return new ReaderT((r: R2 & R) => this.run(r).chain((a) => f(a).run(r)));
+  }
+
+  tchain<R2 = R>(f: (a: A) => ReaderT<R2, void>): ReaderT<R2 & R, A> {
+    return new ReaderT((r: R2 & R) => this.run(r).tchain((a) => f(a).run(r)));
   }
 
   chainError<B, R2 = R>(fn: (e: any) => ReaderT<R2, B>): ReaderT<R2 & R, A | B> {

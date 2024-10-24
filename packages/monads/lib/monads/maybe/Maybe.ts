@@ -67,6 +67,10 @@ export class Maybe<T> implements Monad<T> {
     return this.isNothing() ? Maybe.of(null as B) : f(this.value);
   }
 
+  tchain(f: (a: T) => Monad<void>): Monad<T> {
+    return this.isNothing() ? this : f(this.value).map(() => this.value);
+  }
+
   chainError<B>(f: (e: any) => Monad<B>): Monad<T | B> {
     return this.isNothing() ? f(null) : this;
   }

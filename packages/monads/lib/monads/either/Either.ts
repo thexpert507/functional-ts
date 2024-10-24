@@ -40,6 +40,8 @@ export abstract class Either<L, R> implements Monad<R> {
 
   abstract chain<T>(f: (r: R) => Monad<T>): Monad<T>;
 
+  abstract tchain(f: (a: R) => Monad<void>): Monad<R>;
+
   abstract chainError<B>(f: (e: any) => Monad<B>): Monad<R | B>;
 
   abstract getAsync(): Promise<R>;
@@ -123,6 +125,10 @@ export class Left<L> extends Either<L, never> {
 
   chain<T>(f: (r: never) => Monad<T>): Monad<T> {
     return this as unknown as Either<L, T>;
+  }
+
+  tchain(f: (a: never) => Monad<void>): Monad<never> {
+    return this as unknown as Monad<never>;
   }
 
   chainError<B>(f: (e: any) => Monad<B>): Monad<B> {
@@ -213,6 +219,10 @@ export class Right<R> extends Either<never, R> {
 
   chain<T>(f: (r: R) => Monad<T>): Monad<T> {
     return f(this.value);
+  }
+
+  tchain(f: (a: R) => Monad<void>): Monad<R> {
+    return f(this.value).map(() => this.value);
   }
 
   chainError<B>(f: (e: any) => Monad<B>): Monad<R | B> {

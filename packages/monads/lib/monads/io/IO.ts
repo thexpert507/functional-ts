@@ -62,6 +62,10 @@ export class IO<T> implements Monad<T> {
     return f(this.run());
   }
 
+  tchain(f: (a: T) => Monad<void>): Monad<T> {
+    return task(async () => this.run()).tchain(f);
+  }
+
   chainError<B>(f: (e: any) => Monad<B>): Monad<T | B> {
     return task(async () => this.run()).chainError(f);
   }
