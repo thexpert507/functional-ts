@@ -59,7 +59,7 @@ export class ReaderT<R, A> {
     return ReaderT.ask<R>();
   }
 
-  off<B>(fn: (a: A) => Monad<B>): ReaderT<R, B> {
+  of<B>(fn: (a: A) => Monad<B>): ReaderT<R, B> {
     return new ReaderT((r: R) => this.run(r).chain(fn));
   }
 
