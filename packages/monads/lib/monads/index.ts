@@ -1,4 +1,3 @@
-export * from "./do";
 export * from "./either";
 export * from "./free";
 export * from "./identity";
