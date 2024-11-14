@@ -1,5 +1,7 @@
+export * from "./do";
 export * from "./either";
 export * from "./free";
+export * from "./identity";
 export * from "./io";
 export * from "./maybe";
 export * from "./reader";

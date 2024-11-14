@@ -1,9 +1,10 @@
 import { Either, right, left } from "../either/Either";
 import { TaskEither } from "../either/TaskEither";
 import { MapFn } from "../free";
+import { id } from "../identity";
 import { Task } from "../io";
 import { Monad } from "../types";
-import { listMap, splitArray, toEither, toTask } from "../utils";
+import { listMap, parseError, splitArray, toEither, toTask } from "../utils";
 
 export type PickContext<R> = R extends ReaderT<infer C, any> ? C : never;
 
@@ -40,6 +41,14 @@ export class ReaderT<R, A> {
       .chain(ReaderT.of);
   }
 
+  static sequenceSettled<R, A>(readers: ReaderT<R, A>[]): ReaderT<R, Either<unknown, A>[]> {
+    return ReaderT.ask<R>()
+      .map((ctx) => readers.map((r) => r.run(ctx)))
+      .map(listMap((m) => m.transform(toEither)))
+      .map(TaskEither.sequenceSettled)
+      .chain(ReaderT.of);
+  }
+
   static concurrent(concurrency: number) {
     return <R, A>(readers: ReaderT<R, A>[]): ReaderT<R, A[]> => {
       return ReaderT.ask<R>()
@@ -47,6 +56,19 @@ export class ReaderT<R, A> {
         .map(listMap((m) => m.transform(toEither)))
         .map(splitArray(concurrency))
         .map((chunks) => chunks.map(TaskEither.all))
+        .map(TaskEither.sequence)
+        .chain(ReaderT.of)
+        .map((r) => r.flat());
+    };
+  }
+
+  static concurrentSettled(concurrency: number) {
+    return <R, A>(readers: ReaderT<R, A>[]): ReaderT<R, Either<unknown, A>[]> => {
+      return ReaderT.ask<R>()
+        .map((ctx) => readers.map((r) => r.run(ctx)))
+        .map(listMap((m) => m.transform(toEither)))
+        .map(splitArray(concurrency))
+        .map((chunks) => chunks.map(TaskEither.allSettled))
         .map(TaskEither.sequence)
         .chain(ReaderT.of)
         .map((r) => r.flat());

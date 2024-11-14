@@ -2,6 +2,7 @@ import { PrimitiveEither, Either, Left, Right, left, right } from "./Either";
 import { Monad } from "../types/Monad";
 import { maybe } from "../maybe";
 import { MapFn } from "../free";
+import { id } from "../identity";
 
 const handleError = (error: any) => {
   if (error instanceof Either) return error;
@@ -21,6 +22,14 @@ export class TaskEither<L, R> implements Monad<R> {
     }, TaskEither.right<L, R[]>([]));
   }
 
+  static sequenceSettled<L, R>(arr: TaskEither<L, R>[]): TaskEither<L, Either<L, R>[]> {
+    return arr.reduce((acc, curr) => {
+      return acc.bind((accVal) =>
+        TaskEither.from(() => curr.effect().then((r) => right([...accVal, r])))
+      );
+    }, TaskEither.right<L, Either<L, R>[]>([]));
+  }
+
   static all<L, R>(tasks: TaskEither<L, R>[]): TaskEither<L, R[]> {
     return new TaskEither(async () => {
       return await Promise.all(tasks.map((task) => task.getAsync())).then(right);
@@ -31,6 +40,19 @@ export class TaskEither<L, R> implements Monad<R> {
     return new TaskEither(async () => {
       return await Promise.all(tasks.map((task) => task.effect())).then(right);
     });
+  }
+
+  static flattenTask<L, R>(task: TaskEither<L, TaskEither<L, R>>): TaskEither<L, R> {
+    return TaskEither.from(async () => {
+      return task.fold(
+        async (l) => left(l),
+        async (r) => await r.effect()
+      );
+    });
+  }
+
+  static flatten<L, R>(either: TaskEither<L, Either<L, R>>): TaskEither<L, R> {
+    return TaskEither.from(async () => either.fold(left, id));
   }
 
   private static parsePrimitiveEither<L, R>(value: any): PrimitiveEither<L, R> {

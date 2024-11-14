@@ -125,3 +125,39 @@ test("ReaderT apply", async ({ expect }) => {
 
   expect(await applied.run({ a: 2, b: "hello" }).getAsyncOrElse(() => 0)).toBe(9);
 });
+
+test("ReaderT concurrency", async ({ expect }) => {
+  type Context = { a: number; b: number };
+  const sleep = (ms: number) => Task.void(() => new Promise((resolve) => setTimeout(resolve, ms)));
+
+  const reader1 = readerT(({ a }: Context) => right(a * 2));
+  const reader2 = readerT(({ b }: Context) => sleep(b * 100).map(() => b * 3));
+  const reader3 = readerT(({ a, b }: Context) => sleep(a + b * 100).map(() => a + b));
+  const reader4 = readerT(({ a, b }: Context) => right(a + b));
+
+  console.time("ReaderT.concurrent");
+  const result = await ReaderT.concurrent(4)([reader1, reader2, reader3, reader4])
+    .run({ a: 2, b: 3 })
+    .getAsync();
+  console.timeEnd("ReaderT.concurrent");
+
+  expect(result).toEqual([4, 9, 5, 5]);
+});
+
+test("ReaderT concurrency settled", async ({ expect }) => {
+  type Context = { a: number; b: number };
+  const sleep = (ms: number) => Task.void(() => new Promise((resolve) => setTimeout(resolve, ms)));
+
+  const reader1 = readerT(({ a }: Context) => left("No value"));
+  const reader2 = readerT(({ b }: Context) => sleep(b * 100).map(() => b * 3));
+  const reader3 = readerT(({ a, b }: Context) => sleep(a + b * 100).map(() => a + b));
+  const reader4 = readerT(({ a, b }: Context) => right(a + b));
+
+  console.time("ReaderT.concurrentSettled");
+  const result = await ReaderT.concurrentSettled(4)([reader1, reader2, reader3, reader4])
+    .run({ a: 2, b: 3 })
+    .getAsync();
+  console.timeEnd("ReaderT.concurrentSettled");
+
+  expect(result).toEqual([left("No value"), right(9), right(5), right(5)]);
+});

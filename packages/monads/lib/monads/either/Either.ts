@@ -1,4 +1,5 @@
 import { MapFn } from "../free";
+import { id } from "../identity";
 import { Monad } from "../types/Monad";
 
 export type PrimitiveEither<L, R> = { isRight: boolean; value: L | R };
@@ -12,6 +13,10 @@ export abstract class Either<L, R> implements Monad<R> {
       : ab.isLeft()
       ? (ab as Either<L, B>)
       : (mb as Either<L, B>);
+  }
+
+  static flatten<L, R>(either: Either<L, Either<L, R>>): Either<L, R> {
+    return either.fold<Either<L, R>>(left, id);
   }
 
   constructor(protected value: L | R) {}
