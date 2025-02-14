@@ -7,6 +7,5 @@ export function toAppError(error: any): AppError {
   if (typeof error === "string") return createError(error).from();
   if (typeof error === "object" && "message" in error && "code" in error)
     return createError(error.message, error.code).from();
-  console.error(error);
   return createError("Internal application error").from();
 }
